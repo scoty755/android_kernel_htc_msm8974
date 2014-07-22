@@ -3005,7 +3005,7 @@ static void retry_aicl_mechanism(struct qpnp_chg_chip *chip)
 			pr_err("AICL: error reading USBIN channel = %d, rc = %d\n",
 						USBIN, rc);
 		usbin = (int)result.physical;
-#if defined(CONFIG_MACH_B2_WLJ)
+#if defined(CONFIG_MACH_DUMMY)
 				usb_target_ma = USB_MA_1700;
 #else
 				usb_target_ma = USB_MA_1600;

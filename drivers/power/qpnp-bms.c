@@ -1345,14 +1345,11 @@ static int get_rbatt(struct qpnp_bms_chip *chip,
 		return rbatt_mohm;
 	}
 	
-	batt_temp = batt_temp / 10;
-#ifdef CONFIG_ARCH_MSM8226
 	
 	if (soc_rbatt_mohm > 100)
 		scalefactor = interpolate_scalingfactor(chip->rbatt_sf_lut,
 							batt_temp, 100);
 	else
-#endif
 	scalefactor = interpolate_scalingfactor(chip->rbatt_sf_lut,
 						batt_temp, soc_rbatt_mohm);
 	bms_dbg.rbatt_sf = scalefactor;

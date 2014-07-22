@@ -583,7 +583,6 @@ static int batt_alarm_config(unsigned long lower_threshold,
 #endif
 {
 	int rc = 0;
-
 	BATT_LOG("%s(lw = %lu, up = %lu)", __func__,
 		lower_threshold, upper_threshold);
 	rc = pm8058_batt_alarm_state_set(0, 0);
@@ -591,13 +590,11 @@ static int batt_alarm_config(unsigned long lower_threshold,
 		BATT_ERR("state_set disabled failed, rc=%d", rc);
 		goto done;
 	}
-
 	rc = pm8058_batt_alarm_threshold_set(lower_threshold, upper_threshold);
 	if (rc) {
 		BATT_ERR("threshold_set failed, rc=%d!", rc);
 		goto done;
 	}
-
 #ifdef CONFIG_HTC_BATT_ALARM
 	rc = pm8058_batt_alarm_state_set(1, 0);
 	if (rc) {
@@ -605,7 +602,6 @@ static int batt_alarm_config(unsigned long lower_threshold,
 		goto done;
 	}
 #endif
-
 done:
 	return rc;
 }
@@ -618,15 +614,10 @@ static int batt_clear_voltage_alarm(void)
 		BATT_ERR("state_set disabled failed, rc=%d", rc);
 	return rc;
 }
-
 static int batt_set_voltage_alarm_mode(int mode)
 {
 	int rc = 0;
-
-
 	BATT_LOG("%s , mode:%d\n", __func__, mode);
-
-
 	mutex_lock(&batt_set_alarm_lock);
 	switch (mode) {
 	case BATT_ALARM_DISABLE_MODE:
@@ -652,20 +643,16 @@ static int batt_set_voltage_alarm_mode(int mode)
 	return rc;
 }
 #endif
-
 static int battery_alarm_notifier_func(struct notifier_block *nfb,
 					unsigned long value, void *data);
 static struct notifier_block battery_alarm_notifier = {
 	.notifier_call = battery_alarm_notifier_func,
 };
-
 static int battery_alarm_notifier_func(struct notifier_block *nfb,
 					unsigned long status, void *data)
 {
-
 #ifdef CONFIG_HTC_BATT_ALARM
 	BATT_LOG("%s \n", __func__);
-
 	if (battery_vol_alarm_mode == BATT_ALARM_CRITICAL_MODE) {
 		BATT_LOG("%s(): CRITICAL_MODE counter = %d", __func__,
 			htc_batt_timer.batt_critical_alarm_counter + 1);
@@ -785,7 +772,6 @@ static void cable_status_notifier_func(enum usb_connect_type online)
 #if 0 
 	htc_batt_timer.alarm_timer_flag =
 			(unsigned int)htc_batt_info.rep.charging_source;
-
 	update_wake_lock(htc_batt_info.rep.charging_source);
 #endif
 	mutex_unlock(&cable_notifier_lock);
@@ -1202,7 +1188,8 @@ static int htc_battery_get_rt_attr(enum htc_batt_rt_attr attr, int *val)
 			*val *= 1000;
 		}
 		break;
-#if defined(CONFIG_MACH_DUMMY)#if defined(CONFIG_MACH_B2_WLJ)	case HTC_USB_RT_TEMPERATURE:
+#if defined(CONFIG_MACH_B2_WLJ)
+	case HTC_USB_RT_TEMPERATURE:
 		if (htc_batt_info.igauge->get_usb_temperature) {
 			ret = htc_batt_info.igauge->get_usb_temperature(val);
 		}
@@ -1471,7 +1458,6 @@ static int32_t htc_batt_get_battery_adc(void)
 	u32 vref = 0;
 	u32 battid_adc = 0;
 	struct battery_adc_reply adc;
-
 	
 	ret = pm8058_htc_config_mpp_and_adc_read(
 			adc.adc_voltage,
@@ -1506,18 +1492,13 @@ static int32_t htc_batt_get_battery_adc(void)
 			CHANNEL_ADC_BATT_AMON,
 			htc_batt_info.mpp_config->battid[XOADC_MPP],
 			htc_batt_info.mpp_config->battid[PM_MPP_AIN_AMUX]);
-
 	vref = htc_batt_getmidvalue(adc.adc_voltage);
 	battid_adc = htc_batt_getmidvalue(adc.adc_battid);
-
 	BATT_LOG("%s , vref:%d, battid_adc:%d, battid:%d\n", __func__,  vref, battid_adc, battid_adc * 1000 / vref);
-
 	if (ret)
 		goto get_adc_failed;
-
 	memcpy(&htc_batt_info.adc_data, &adc,
 		sizeof(struct battery_adc_reply));
-
 get_adc_failed:
 	return ret;
 }
@@ -1987,7 +1968,6 @@ static void batt_level_adjust(unsigned long time_since_last_update_ms)
 			if (htc_batt_info.rep.batt_temp < 0 &&
 				drop_raw_level == 0 &&
 				store_level >= 2) {
-				
 				dropping_level = prev_level - htc_batt_info.rep.level;
 				if((dropping_level == 1) || (dropping_level == 0)) {
 					store_level = store_level - (2 - dropping_level);
@@ -2656,11 +2636,8 @@ static void mbat_in_func(struct work_struct *work)
 static irqreturn_t mbat_int_handler(int irq, void *data)
 {
 	struct htc_battery_platform_data *pdata = data;
-
 	disable_irq_nosync(pdata->gpio_mbat_in);
-
 	schedule_delayed_work(&mbat_in_struct, msecs_to_jiffies(50));
-
 	return IRQ_HANDLED;
 }
 #endif
@@ -2968,7 +2945,7 @@ static int htc_battery_probe(struct platform_device *pdev)
 	INIT_WORK(&htc_batt_timer.batt_work, batt_worker);
 	INIT_DELAYED_WORK(&htc_batt_timer.unknown_usb_detect_work,
 							unknown_usb_detect_worker);
-#if defined(CONFIG_MACH_B2_WLJ)
+#if defined(CONFIG_MACH_DUMMY)
 	INIT_DELAYED_WORK(&htc_batt_timer.usb_overheat_monitor_work,
 							usb_overheat_monitor);
 #endif
@@ -3142,4 +3119,3 @@ static int __init htc_battery_init(void)
 module_init(htc_battery_init);
 MODULE_DESCRIPTION("HTC Battery Driver");
 MODULE_LICENSE("GPL");
-
