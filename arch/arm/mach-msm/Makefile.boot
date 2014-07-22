@@ -187,6 +187,10 @@ else ifeq ($(CONFIG_MACH_B2_WLJ), y)
 	htc_dtb-$(CONFIG_ARCH_MSM8974)  += msm8974pro-ab-pm8941-b2wlj-xb.dtb
 endif
 
+ifeq ($(CONFIG_MACH_MEM_UL), y)
+	htc_dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-memul.dtb
+endif
+
 ifeq ($(CONFIG_MACH_A5), y)
 	htc_dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-a5ul.dtb
 	htc_dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-a5dwg.dtb
