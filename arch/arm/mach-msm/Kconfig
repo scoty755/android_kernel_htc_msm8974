@@ -3219,13 +3219,19 @@ config MACH_B2_WLJ
         help
           Support for HTC MSM8974 B2_WLJ
 
-endif
+config MACH_A5
+        depends on ARCH_MSM8226
+        bool "MSM8226 A5"
+        help
+          Support for HTC MSM8226 A5
 
 config MACH_NAME
         string "Macine Name"
         default ""
         help
           Support for MACH Name
+
+endif
 
 config PERFLOCK
     depends on CPU_FREQ
