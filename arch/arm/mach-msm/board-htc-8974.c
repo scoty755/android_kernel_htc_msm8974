@@ -557,21 +557,98 @@ static void htc_8974_add_usb_devices(void)
 #ifdef CONFIG_MACH_M8_WHL
 		android_usb_pdata.nluns = 2;
 		android_usb_pdata.cdrom_lun = 0x2;
+#elif defined(CONFIG_MACH_DUMMY)
+		android_usb_pdata.nluns = 2;
+		android_usb_pdata.cdrom_lun = 0x2;
+#elif defined(CONFIG_MACH_DUMMY)
+		android_usb_pdata.nluns = 2;
+		android_usb_pdata.cdrom_lun = 0x2;
+#elif defined(CONFIG_MACH_MEC_WHL)
 #else
 		android_usb_pdata.nluns = 1;
 		android_usb_pdata.cdrom_lun = 0x1;
 #endif
 	}
-#ifdef CONFIG_MACH_M8
+#ifdef CONFIG_MACH_DUMMY
+	android_usb_pdata.product_id	= 0x061A;
+#elif defined(CONFIG_MACH_DUMMY)
+	android_usb_pdata.product_id	= 0x0616;
+	android_usb_pdata.vzw_unmount_cdrom = 1;
+	android_usb_pdata.nluns = 2;
+        android_usb_pdata.cdrom_lun = 0x3;
+#elif defined(CONFIG_MACH_DUMMY)
+	android_usb_pdata.product_id	= 0x061A;
+#elif defined(CONFIG_MACH_DUMMY)
+	android_usb_pdata.product_id	= 0x0623;
+#elif defined(CONFIG_MACH_DUMMY)
+	android_usb_pdata.product_id	= 0x063B;
+#elif defined(CONFIG_MACH_DUMMY)
+	android_usb_pdata.product_id	= 0x0643;
+#elif defined(CONFIG_MACH_DUMMY)
+	android_usb_pdata.product_id	= 0x063A;
+#elif defined(CONFIG_MACH_DUMMY)
+	android_usb_pdata.product_id	= 0x0635;
+#elif defined(CONFIG_MACH_DUMMY)
+	android_usb_pdata.product_id	= 0x0638;
+#elif defined(CONFIG_MACH_DUMMY)
+	android_usb_pdata.product_id	= 0x0636;
+#elif defined(CONFIG_MACH_DUMMY)
+	android_usb_pdata.product_id	= 0x0634;
+#elif defined(CONFIG_MACH_M8)
 	android_usb_pdata.product_id	= 0x061A;
 #elif defined(CONFIG_MACH_M8_WL)
 	android_usb_pdata.product_id	= 0x0616;
 	android_usb_pdata.vzw_unmount_cdrom = 1;
 #elif defined(CONFIG_MACH_M8_UHL)
 	android_usb_pdata.product_id	= 0x063A;
+#elif defined(CONFIG_MACH_B2_UHL)
+	android_usb_pdata.product_id	= 0x0642;
+#elif defined(CONFIG_MACH_B2_UL)
+	android_usb_pdata.product_id	= 0x0642;
 #endif
 	platform_device_register(&android_usb_device);
 }
+#if (defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DUMMY))
+static ssize_t syn_vkeys_show(struct kobject *kobj,
+			struct kobj_attribute *attr, char *buf)
+{
+	return sprintf(buf,
+	__stringify(EV_KEY) ":" __stringify(KEY_BACK) ":241:2007:158:165"
+	":" __stringify(EV_KEY) ":" __stringify(KEY_HOME) ":847:2007:158:165"
+	"\n");
+}
+
+static struct kobj_attribute syn_vkeys_attr = {
+	.attr = {
+		.name = "virtualkeys.synaptics-rmi-touchscreen",
+		.mode = S_IRUGO,
+	},
+	.show = &syn_vkeys_show,
+};
+
+static struct attribute *syn_properties_attrs[] = {
+	&syn_vkeys_attr.attr,
+	NULL
+};
+
+static struct attribute_group syn_properties_attr_group = {
+	.attrs = syn_properties_attrs,
+};
+
+static void syn_init_vkeys_8974(void)
+{
+	int rc = 0;
+	static struct kobject *syn_properties_kobj;
+
+	pr_info("[TP] init virtual key");
+	syn_properties_kobj = kobject_create_and_add("board_properties", NULL);
+	if (syn_properties_kobj)
+		rc = sysfs_create_group(syn_properties_kobj, &syn_properties_attr_group);
+	if (!syn_properties_kobj || rc)
+		pr_err("%s: failed to create board_properties\n", __func__);
+	return;
+}
+#endif
 
 static struct memtype_reserve htc_8974_reserve_table[] __initdata = {
 	[MEMTYPE_SMI] = {
@@ -615,9 +692,16 @@ static int critical_alarm_voltage_mv[] = {3000, 3200, 3400};
 
 static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.guage_driver = 0,
+#if defined(CONFIG_MACH_DUMMY)
+	.chg_limit_active_mask = HTC_BATT_CHG_LIMIT_BIT_TALK |
+								HTC_BATT_CHG_LIMIT_BIT_NAVI |
+								HTC_BATT_CHG_LIMIT_BIT_KDDI |
+								HTC_BATT_CHG_LIMIT_BIT_THRML,
+#else
 	.chg_limit_active_mask = HTC_BATT_CHG_LIMIT_BIT_TALK |
 								HTC_BATT_CHG_LIMIT_BIT_NAVI |
 								HTC_BATT_CHG_LIMIT_BIT_THRML,
+#endif
 #ifdef CONFIG_DUTY_CYCLE_LIMIT
 	.chg_limit_timer_sub_mask = HTC_BATT_CHG_LIMIT_BIT_THRML,
 #endif
@@ -719,9 +803,15 @@ void __init htc_8974_add_drivers(void)
 	htc_batt_cell_register();
 	msm8974_add_batt_devices();
 #endif 
+#if (defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DUMMY))
+	syn_init_vkeys_8974();
+#endif
 	htc_8974_cable_detect_register();
+	
+	if (board_mfg_mode() != 6 && board_mfg_mode() != 7)
+		htc_8974_add_usb_devices();
 	htc_8974_add_usb_devices();
-	htc_8974_dsi_panel_power_register();
+
 #if defined(CONFIG_FB_MSM_MDSS_HDMI_MHL_SII9234) && defined(CONFIG_HTC_MHL_DETECTION)
 	htc_8974_mhl_ctrl_register();
 #endif
@@ -801,7 +891,6 @@ void __init htc_8974_init(void)
 	pr_info("%s: pid=%d, pcbid=%d, socver=0x%x\n", __func__
 		, of_machine_pid(), of_machine_pcbid(), of_machine_socver());
 
-	msm_htc_8974_init_gpiomux();
 	regulator_has_full_constraints();
 	board_dt_populate(adata);
 	htc_8974_add_drivers();

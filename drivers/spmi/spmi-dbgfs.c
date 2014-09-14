@@ -1238,6 +1238,50 @@ int htc_vreg_dump(int vreg_id, struct seq_file *m, char *vreg_buffer, int curr_l
         return curr_len;
 }
 
+#if defined(CONFIG_MACH_DUMMY)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC
+#elif defined(CONFIG_MACH_MEC_WHL)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC
+#elif defined(CONFIG_MACH_DUMMY)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC
+#elif defined(CONFIG_MACH_DUMMY)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC
+#elif defined(CONFIG_MACH_MEC_DWG)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC
+#elif defined(CONFIG_MACH_B2_UL)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_B2
+#else
+#endif
+
+#if defined(PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC)
+void force_disable_PMICGPIO34(void)
+{
+	int ret;
+	uint8_t voltage_sel = 0x10;
+
+	ret = spmi_write_data(qpnp_vregs.ctrl, &voltage_sel, 0xE140, 1);
+
+}
+#elif defined(PN547_I2C_POWEROFF_SEQUENCE_FOR_B2)
+void force_disable_PMICGPIO34(void)
+{
+	int ret;
+	uint8_t voltage_sel = 0x10;
+
+	ret = spmi_write_data(qpnp_vregs.ctrl, &voltage_sel, 0xE140, 1);
+
+}
+void force_disable_PMICLVS1(void)
+{
+	int ret;
+	uint8_t voltage_sel = 0x0;
+
+	ret = spmi_write_data(qpnp_vregs.ctrl, &voltage_sel, 0x18046, 1);
+
+}
+#else
+#endif
+
 int htc_vregs_dump(char *vreg_buffer, int curr_len)
 {
         int i;

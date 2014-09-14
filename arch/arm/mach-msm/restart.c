@@ -58,6 +58,36 @@ extern int get_partition_num_by_name(char *name);
 
 #endif
 
+#if defined(CONFIG_MACH_DUMMY)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC
+#elif defined(CONFIG_MACH_MEC_WHL)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC
+#elif defined(CONFIG_MACH_DUMMY)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC
+#elif defined(CONFIG_MACH_DUMMY)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC
+#elif defined(CONFIG_MACH_MEC_DWG)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC
+#elif defined(CONFIG_MACH_B2_UL)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_B2
+#else
+#endif
+
+#if defined(PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC)
+#define SR_I2C_SCL     11
+#define SR_I2C_SDA     10
+#define TP_RST         23
+#define SRIO_1V8_EN    95
+extern void force_disable_PMICGPIO34(void);
+#elif defined(PN547_I2C_POWEROFF_SEQUENCE_FOR_B2)
+#define SR_I2C_SCL     11
+#define SR_I2C_SDA     10
+#define TP_RST         23
+extern void force_disable_PMICGPIO34(void);
+extern void force_disable_PMICLVS1(void);
+#else
+#endif
+
 #define WDT0_RST	0x38
 #define WDT0_EN		0x40
 #define WDT0_BARK_TIME	0x4C
