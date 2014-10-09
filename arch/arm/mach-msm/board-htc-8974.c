@@ -564,6 +564,9 @@ static void htc_8974_add_usb_devices(void)
 		android_usb_pdata.nluns = 2;
 		android_usb_pdata.cdrom_lun = 0x2;
 #elif defined(CONFIG_MACH_MEC_WHL)
+#elif defined(CONFIG_MACH_B2_WLJ)
+		android_usb_pdata.nluns = 2;
+		android_usb_pdata.cdrom_lun = 0x2;
 #else
 		android_usb_pdata.nluns = 1;
 		android_usb_pdata.cdrom_lun = 0x1;
@@ -605,6 +608,8 @@ static void htc_8974_add_usb_devices(void)
 	android_usb_pdata.product_id	= 0x0642;
 #elif defined(CONFIG_MACH_B2_UL)
 	android_usb_pdata.product_id	= 0x0642;
+#elif defined(CONFIG_MACH_B2_WLJ)
+	android_usb_pdata.product_id	= 0x0634;
 #endif
 	platform_device_register(&android_usb_device);
 }
@@ -692,7 +697,12 @@ static int critical_alarm_voltage_mv[] = {3000, 3200, 3400};
 
 static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.guage_driver = 0,
-#if defined(CONFIG_MACH_DUMMY)
+#if defined(CONFIG_MACH_B2_WLJ)
+	.chg_limit_active_mask = HTC_BATT_CHG_LIMIT_BIT_TALK |
+								HTC_BATT_CHG_LIMIT_BIT_NAVI |
+								HTC_BATT_CHG_LIMIT_BIT_KDDI |
+								HTC_BATT_CHG_LIMIT_BIT_THRML,
+#elif defined(CONFIG_MACH_DUMMY)
 	.chg_limit_active_mask = HTC_BATT_CHG_LIMIT_BIT_TALK |
 								HTC_BATT_CHG_LIMIT_BIT_NAVI |
 								HTC_BATT_CHG_LIMIT_BIT_KDDI |
@@ -713,6 +723,12 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.smooth_chg_full_delay_min = 1,
 	.decreased_batt_level_check = 1,
 	.force_shutdown_batt_vol = 3000,
+#if defined(CONFIG_MACH_B2_WLJ)
+	.usb_temp_monitor_enable = 1,
+	.usb_temp_overheat_increase_threshold = 25, 
+	.normal_usb_temp_threshold = 450, 
+	.usb_temp_overheat_threshold = 650,
+#endif
 	
 	.icharger.name = "pm8941",
 	.icharger.get_charging_source = pm8941_get_charging_source,
@@ -748,6 +764,10 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.igauge.get_battery_id = pm8941_get_batt_id,
 	.igauge.get_battery_soc = pm8941_bms_get_batt_soc,
 	.igauge.get_battery_cc = pm8941_bms_get_batt_cc,
+#if defined(CONFIG_MACH_B2_WLJ)
+	.igauge.get_usb_temperature = pm8941_get_usb_temperature,
+	.igauge.usb_overheat_otg_mode_check = pm8941_usb_overheat_otg_mode_check,
+#endif
 	.igauge.store_battery_data = pm8941_bms_store_battery_data_emmc,
 	.igauge.store_battery_ui_soc = pm8941_bms_store_battery_ui_soc,
 	.igauge.get_battery_ui_soc = pm8941_bms_get_battery_ui_soc,

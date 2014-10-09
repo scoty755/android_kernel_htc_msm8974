@@ -185,4 +185,9 @@ ifeq ($(CONFIG_MACH_B2_UL), y)
 	htc_dtb-$(CONFIG_ARCH_MSM8974)  += msm8974pro-ab-pm8941-b2ul-xb.dtb
 endif
 
+ifeq ($(CONFIG_MACH_B2_WLJ), y)
+	htc_dtb-$(CONFIG_ARCH_MSM8974)  += msm8974pro-ab-pm8941-b2wlj.dtb
+	htc_dtb-$(CONFIG_ARCH_MSM8974)  += msm8974pro-ab-pm8941-b2wlj-xb.dtb
+endif
+
 endif

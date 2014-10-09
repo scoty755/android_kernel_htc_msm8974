@@ -421,6 +421,133 @@ struct htc_chg_timer {
 	unsigned long t_since_last_do_ms;
 	unsigned long total_time_ms;
 };
+
+#if defined(CONFIG_MACH_B2_WLJ)
+static const struct qpnp_vadc_map_pt usb_adcmap_btm_threshold[] = {
+	{-200, 1668},
+	{-190, 1659},
+	{-180, 1651},
+	{-170, 1641},
+	{-160, 1632},
+	{-150, 1622},
+	{-140, 1611},
+	{-130, 1600},
+	{-120, 1589},
+	{-110, 1577},
+	{-100, 1565},
+	{-90, 1552},
+	{-80, 1539},
+	{-70, 1525},
+	{-60, 1511},
+	{-50, 1496},
+	{-40, 1481},
+	{-30, 1466},
+	{-20, 1449},
+	{-10, 1433},
+	{0, 1416},
+	{10, 1398},
+	{20, 1381},
+	{30, 1362},
+	{40, 1344},
+	{50, 1325},
+	{60, 1305},
+	{70, 1286},
+	{80, 1266},
+	{90, 1245},
+	{100, 1225},
+	{110, 1204},
+	{120, 1183},
+	{130, 1161},
+	{140, 1140},
+	{150, 1118},
+	{160, 1096},
+	{170, 1075},
+	{180, 1053},
+	{190, 1031},
+	{200, 1009},
+	{210, 987},
+	{220, 965},
+	{230, 943},
+	{240, 922},
+	{250, 900},
+	{260, 879},
+	{270, 857},
+	{280, 836},
+	{290, 815},
+	{300, 795},
+	{310, 774},
+	{320, 754},
+	{330, 734},
+	{340, 715},
+	{350, 695},
+	{360, 677},
+	{370, 658},
+	{380, 640},
+	{390, 622},
+	{400, 604},
+	{410, 587},
+	{420, 570},
+	{430, 554},
+	{440, 537},
+	{450, 522},
+	{460, 506},
+	{470, 491},
+	{480, 477},
+	{490, 462},
+	{500, 449},
+	{510, 435},
+	{520, 422},
+	{530, 409},
+	{540, 397},
+	{550, 385},
+	{560, 373},
+	{570, 361},
+	{580, 350},
+	{590, 339},
+	{600, 329},
+	{610, 319},
+	{620, 309},
+	{630, 300},
+	{640, 290},
+	{650, 281},
+	{660, 273},
+	{670, 264},
+	{680, 256},
+	{690, 248},
+	{700, 241},
+	{710, 233},
+	{720, 226},
+	{730, 219},
+	{740, 212},
+	{750, 206},
+	{760, 200},
+	{770, 193},
+	{780, 188},
+	{790, 182},
+	{800, 176},
+	{810, 171},
+	{820, 166},
+	{830, 161},
+	{840, 156},
+	{850, 151},
+	{860, 147},
+	{870, 142},
+	{880, 138},
+	{890, 134},
+	{900, 130},
+	{910, 126},
+	{920, 123},
+	{930, 119},
+	{940, 116},
+	{950, 112},
+	{960, 109},
+	{970, 106},
+	{980, 103},
+	{990, 100},
+	{1000, 97}
+};
+#endif
+
 static struct htc_chg_timer aicl_timer, retry_aicl_timer, usb_irq_timer;
 
 static bool flag_keep_charge_on;
@@ -473,7 +600,10 @@ qpnp_chg_set_appropriate_battery_current(struct qpnp_chg_chip *chip);
 static int qpnp_chg_ibatmax_set(struct qpnp_chg_chip *chip, int chg_current);
 int htc_battery_is_support_qc20(void);
 int htc_battery_check_cable_type_from_usb(void);
-
+#if defined(CONFIG_MACH_B2_WLJ)
+static int32_t read_usb_temperature_mpp2(struct qpnp_chg_chip *chip);
+static int64_t read_usb_temperature_mpp2_vol(struct qpnp_chg_chip *chip);
+#endif
 static struct of_device_id qpnp_charger_match_table[] = {
 	{ .compatible = QPNP_CHARGER_DEV_NAME, },
 	{}
@@ -2630,7 +2760,13 @@ static void retry_aicl_mechanism(struct qpnp_chg_chip *chip)
 			pr_debug("AICL: error reading USBIN channel = %d, rc = %d\n",
 						USBIN, rc);
 		usbin = (int)result.physical;
+#if defined(CONFIG_MACH_B2_WLJ)
+		usb_target_ma = USB_MA_1700;
+#elif defined(CONFIG_MACH_B2_UL)
+		usb_target_ma = USB_MA_1600;
+#else
 		usb_target_ma = USB_MA_1500;
+#endif
 		pr_debug("AICL: retry triggered, total_ms=%ld, usbin=%d, usb_target_ma=%d\n",
 			retry_aicl_timer.total_time_ms, usbin, usb_target_ma);
 		retry_aicl_timer.total_time_ms = 0;
@@ -2967,6 +3103,12 @@ aicl_check_worker(struct work_struct *work)
 
 			if (usb_ma >= usb_target_ma) {
 				is_aicl_worker_enabled = false;
+#if !(defined(CONFIG_MACH_B2_WLJ))
+				if (usb_ma > USB_MA_1500) {
+					usb_target_ma = USB_MA_1500;
+					__pm8941_charger_vbus_draw(usb_target_ma);
+				}
+#endif
 				pr_debug("AICL: finish! usb_target_ma=%d, aicl_worker=%d\n",
 						usb_target_ma, is_aicl_worker_enabled);
 
@@ -3275,7 +3417,13 @@ int pm8941_set_pwrsrc_and_charger_enable(enum htc_power_source_type src,
 				mA = htc_power_bank_set_pwrsrc();
 			else
 				
+#if defined(CONFIG_MACH_B2_WLJ)
+				mA = USB_MA_1700;
+#elif defined(CONFIG_MACH_B2_UL)
+				mA = USB_MA_1600;
+#else
 				mA = USB_MA_1500;
+#endif
 		} else {
 			mA = USB_MA_1100;
 		}
@@ -3977,6 +4125,12 @@ static void dump_all(int more)
 	tbat_deg = get_prop_batt_temp(the_chip)/10;
 	if (tbat_deg >= 68)
 		pr_warn("battery temperature=%d >= 68\n", tbat_deg);
+#if defined(CONFIG_MACH_B2_WLJ)
+	usb_temp = (int)read_usb_temperature_mpp2(the_chip);
+	usb_temp_vol = (int)read_usb_temperature_mpp2_vol(the_chip);
+#else
+	usb_temp = usb_temp_vol = 0;
+#endif
 
 	chgr_sts = pm_get_chgr_int_rt_sts(the_chip);
 	buck_sts = pm_get_buck_int_rt_sts(the_chip);
@@ -4062,6 +4216,9 @@ int pm8941_is_batt_full_eoc_stop(int *result)
 int pm8941_charger_get_attr_text(char *buf, int size)
 {
 	int rc;
+#if defined(CONFIG_MACH_B2_WLJ)
+	int usb_temp, usb_temp_vol;
+#endif
 	struct qpnp_vadc_result result;
 	int len = 0;
 	u64 val = 0;
@@ -4149,7 +4306,12 @@ int pm8941_charger_get_attr_text(char *buf, int size)
 	}
 	len += scnprintf(buf + len, size - len,
 			"USBIN(uV): %d;\n", (int)result.physical);
-
+#if defined(CONFIG_MACH_B2_WLJ)
+	usb_temp = (int)read_usb_temperature_mpp2(the_chip);
+	usb_temp_vol = (int)read_usb_temperature_mpp2_vol(the_chip);
+	len += scnprintf(buf + len, size - len, "usb_temperature: %d;\n", usb_temp);
+	len += scnprintf(buf + len, size - len, "usb_temperature_adc: %d;\n", usb_temp_vol);
+#endif
 	len += scnprintf(buf + len, size - len,
 			"AC_SAFETY_TIMEOUT(bool): %d;\n", (int)is_ac_safety_timeout);
 
@@ -4425,6 +4587,115 @@ static int set_therm_mitigation_level(const char *val, struct kernel_param *kp)
 module_param_call(thermal_mitigation, set_therm_mitigation_level,
 					param_get_uint,
 					&thermal_mitigation, 0644);
+#if defined(CONFIG_MACH_B2_WLJ)
+static int32_t pm8941_adc_map_temp_voltage(const struct qpnp_vadc_map_pt *pts,
+		uint32_t tablesize, int32_t input, int64_t *output)
+{
+	bool descending = 1;
+	uint32_t i = 0;
+
+	if (pts == NULL)
+		return -EINVAL;
+
+	
+	if (tablesize > 1) {
+		if (pts[0].y < pts[1].y)
+			descending = 0;
+	}
+
+	while (i < tablesize) {
+		if ((descending == 1) && (pts[i].y < input)) {
+			break;
+		} else if ((descending == 0) && (pts[i].y > input)) {
+			break;
+		} else {
+			i++;
+		}
+	}
+
+	if (i == 0) {
+		*output = pts[0].x;
+	} else if (i == tablesize) {
+		*output = pts[tablesize-1].x;
+	} else {
+		
+		
+		*output = (((int32_t) ((pts[i].x - pts[i-1].x)*
+			(input - pts[i-1].y))/
+			(pts[i].y - pts[i-1].y))+
+			pts[i-1].x);
+	}
+
+	return 0;
+}
+
+static int32_t read_usb_temperature_mpp2(struct qpnp_chg_chip *chip)
+{
+	int rc;
+	struct qpnp_vadc_result result;
+	struct qpnp_vadc_result adc_chan_result;
+	int64_t usb_temp_vol = 0;
+
+	rc = qpnp_vadc_read(chip->vadc_dev, P_MUX2_1_1, &result);
+	if (rc) {
+		pr_err("error reading batt id channel = %d, rc = %d\n",
+					P_MUX2_1_1, rc);
+		return rc;
+	}
+	usb_temp_vol = result.physical;
+	usb_temp_vol = (int)usb_temp_vol / 1000;
+
+	pm8941_adc_map_temp_voltage(
+			usb_adcmap_btm_threshold,
+			ARRAY_SIZE(usb_adcmap_btm_threshold),
+			(int32_t)usb_temp_vol,
+			&adc_chan_result.physical);
+	return adc_chan_result.physical;
+}
+
+static int64_t read_usb_temperature_mpp2_vol(struct qpnp_chg_chip *chip)
+{
+	int rc;
+	struct qpnp_vadc_result result;
+
+	rc = qpnp_vadc_read(chip->vadc_dev, P_MUX2_1_1, &result);
+	if (rc) {
+		pr_err("error reading batt id channel = %d, rc = %d\n",
+					P_MUX2_1_1, rc);
+		return rc;
+	}
+
+	return result.physical;
+}
+
+int pm8941_get_usb_temperature(int *result)
+{
+	if (!the_chip) {
+		pr_warn("called before init\n");
+		return -EINVAL;
+	}
+
+	if(flag_keep_charge_on || flag_pa_recharge)
+		*result = 275;
+	else
+		*result = read_usb_temperature_mpp2(the_chip);
+
+	return 0;
+}
+
+int pm8941_usb_overheat_otg_mode_check(void)
+{
+	if (!the_chip) {
+		pr_warn("called before init\n");
+		return -EINVAL;
+	}
+
+	if(qpnp_chg_is_otg_en_set(the_chip))
+		switch_usb_to_charge_mode(the_chip);
+
+	return 0;
+}
+#endif
 #endif 
 
 #define BTC_CONFIG_ENABLED	BIT(7)
