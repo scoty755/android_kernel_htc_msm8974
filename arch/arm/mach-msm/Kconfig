@@ -3221,8 +3221,6 @@ config MACH_NAME
         help
           Support for MACH Name
 
-endif
-
 config PERFLOCK
     depends on CPU_FREQ
     depends on HTC_PNPMGR
