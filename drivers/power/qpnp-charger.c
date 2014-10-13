@@ -4128,8 +4128,6 @@ static void dump_all(int more)
 #if defined(CONFIG_MACH_B2_WLJ)
 	usb_temp = (int)read_usb_temperature_mpp2(the_chip);
 	usb_temp_vol = (int)read_usb_temperature_mpp2_vol(the_chip);
-#else
-	usb_temp = usb_temp_vol = 0;
 #endif
 
 	chgr_sts = pm_get_chgr_int_rt_sts(the_chip);
