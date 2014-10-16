@@ -926,6 +926,7 @@ void __init htc_8974_init(void)
 	pr_info("%s: pid=%d, pcbid=%d, socver=0x%x\n", __func__
 		, of_machine_pid(), of_machine_pcbid(), of_machine_socver());
 
+	msm_htc_8974_init_gpiomux();
 	regulator_has_full_constraints();
 	board_dt_populate(adata);
 	htc_8974_add_drivers();
