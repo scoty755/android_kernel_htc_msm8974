@@ -846,6 +846,7 @@ void __init htc_8974_add_drivers(void)
 	if (board_mfg_mode() != 6 && board_mfg_mode() != 7)
 		htc_8974_add_usb_devices();
 	htc_8974_add_usb_devices();
+	htc_8974_dsi_panel_power_register();
 
 #if defined(CONFIG_FB_MSM_MDSS_HDMI_MHL_SII9234) && defined(CONFIG_HTC_MHL_DETECTION)
 	htc_8974_mhl_ctrl_register();
