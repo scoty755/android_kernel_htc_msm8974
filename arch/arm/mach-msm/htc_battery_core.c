@@ -118,6 +118,7 @@ static enum power_supply_property htc_battery_properties[] = {
 	POWER_SUPPLY_PROP_INPUT_CURRENT_MAX,
 	POWER_SUPPLY_PROP_VOLTAGE_MIN,
 	POWER_SUPPLY_PROP_INPUT_VOLTAGE_REGULATION,
+	POWER_SUPPLY_PROP_USB_OVERHEAT,
 };
 
 static enum power_supply_property htc_power_properties[] = {
@@ -591,6 +592,32 @@ static ssize_t htc_battery_trigger_store_battery_data(struct device *dev,
 	return count;
 }
 
+static ssize_t htc_battery_qb_mode_shutdown_status(struct device *dev,
+				struct device_attribute *attr,
+				const char *buf, size_t count)
+{
+	int rc = 0;
+	unsigned long trigger_flag = 0;
+
+	rc = strict_strtoul(buf, 10, &trigger_flag);
+	if (rc)
+		return rc;
+
+	BATT_LOG("Set context trigger_flag = %lu", trigger_flag);
+
+	if((trigger_flag != 0) && (trigger_flag != 1))
+		return -EINVAL;
+
+	if (!battery_core_info.func.func_qb_mode_shutdown_status) {
+		BATT_ERR("No set trigger qb mode shutdown status function!");
+		return -ENOENT;
+	}
+
+	battery_core_info.func.func_qb_mode_shutdown_status(trigger_flag);
+
+	return count;
+}
+
 static struct device_attribute htc_battery_attrs[] = {
 	HTC_BATTERY_ATTR(batt_id),
 	HTC_BATTERY_ATTR(batt_vol),
@@ -602,6 +629,8 @@ static struct device_attribute htc_battery_attrs[] = {
 	HTC_BATTERY_ATTR(over_vchg),
 	HTC_BATTERY_ATTR(batt_state),
 	HTC_BATTERY_ATTR(batt_cable_in),
+	HTC_BATTERY_ATTR(usb_temp),
+	HTC_BATTERY_ATTR(usb_overheat),
 
 	__ATTR(batt_attr_text, S_IRUGO, htc_battery_show_batt_attr, NULL),
 	__ATTR(batt_power_meter, S_IRUGO, htc_battery_show_cc_attr, NULL),
@@ -632,6 +661,8 @@ static struct device_attribute htc_set_delta_attrs[] = {
 		htc_battery_set_context_event),
 	__ATTR(store_battery_data, S_IWUSR | S_IWGRP, NULL,
 		htc_battery_trigger_store_battery_data),
+	__ATTR(qb_mode_shutdown, S_IWUSR | S_IWGRP, NULL,
+		htc_battery_qb_mode_shutdown_status),
 };
 
 static struct device_attribute htc_battery_rt_attrs[] = {
@@ -752,6 +783,9 @@ static int htc_battery_get_property(struct power_supply *psy,
 				pr_info("%s: function not ready. psp=%d\n", __func__, psp);
 		} else
 			pr_info("%s: function doesn't exist! psp=%d\n", __func__, psp);
+		break;
+	case POWER_SUPPLY_PROP_USB_OVERHEAT:
+		val->intval = battery_core_info.rep.usb_overheat;
 		break;
 	default:
 		pr_info("%s: invalid type, psp=%d\n", __func__, psp);
@@ -929,6 +963,14 @@ static ssize_t htc_battery_show_property(struct device *dev,
 			i += scnprintf(buf + i, PAGE_SIZE - i, "%d\n", 0);
 		else
 			i += scnprintf(buf + i, PAGE_SIZE - i, "%d\n", 1);
+		break;
+	case USB_TEMP:
+		i += scnprintf(buf + i, PAGE_SIZE - i, "%d\n",
+				battery_core_info.rep.usb_temp);
+		break;
+	case USB_OVERHEAT:
+		i += scnprintf(buf + i, PAGE_SIZE - i, "%d\n",
+				battery_core_info.rep.usb_overheat);
 		break;
 	default:
 		i = -EINVAL;
@@ -1185,7 +1227,8 @@ int htc_battery_core_update_changed(void)
 
 	BATT_EMBEDDED("ID=%d,level=%d,level_raw=%d,vol=%d,temp=%d,current=%d,"
 		"chg_src=%d,chg_en=%d,full_bat=%d,over_vchg=%d,"
-		"batt_state=%d,cable_ready=%d,overload=%d,ui_chg_full=%d",
+		"batt_state=%d,cable_ready=%d,overload=%d,ui_chg_full=%d,"
+		"usb_temp=%d,usb_overheat=%d",
 			battery_core_info.rep.batt_id,
 			battery_core_info.rep.level,
 			battery_core_info.rep.level_raw,
@@ -1199,7 +1242,9 @@ int htc_battery_core_update_changed(void)
 			battery_core_info.rep.batt_state,
 			battery_core_info.rep.cable_ready,
 			battery_core_info.rep.overload,
-			battery_core_info.htc_charge_full);
+			battery_core_info.htc_charge_full,
+			battery_core_info.rep.usb_temp,
+			battery_core_info.rep.usb_overheat);
 
 
 	
@@ -1283,6 +1328,9 @@ int htc_battery_core_register(struct device *dev,
 	if (htc_battery->func_trigger_store_battery_data)
 		battery_core_info.func.func_trigger_store_battery_data =
 					htc_battery->func_trigger_store_battery_data;
+	if (htc_battery->func_qb_mode_shutdown_status)
+		battery_core_info.func.func_qb_mode_shutdown_status =
+					htc_battery->func_qb_mode_shutdown_status;
 
 	
 	for (i = 0; i < ARRAY_SIZE(htc_power_supplies); i++) {
@@ -1324,6 +1372,8 @@ int htc_battery_core_register(struct device *dev,
 	battery_core_info.rep.batt_state = 0;
 	battery_core_info.rep.cable_ready = 0;
 	battery_core_info.rep.overload = 0;
+	battery_core_info.rep.usb_temp = 285;
+	battery_core_info.rep.usb_overheat = 0;
 
 	battery_over_loading = 0;
 

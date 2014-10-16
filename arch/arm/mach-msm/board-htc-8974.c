@@ -738,6 +738,7 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.icharger.set_pwrsrc_and_charger_enable =
 						pm8941_set_pwrsrc_and_charger_enable,
 	.icharger.set_limit_charge_enable = pm8941_limit_charge_enable,
+	.icharger.set_limit_input_current = pm8941_limit_input_current,
 	.icharger.set_chg_iusbmax = pm8941_set_chg_iusbmax,
 	.icharger.set_chg_vin_min = pm8941_set_chg_vin_min,
 	.icharger.is_ovp = pm8941_is_charger_ovp,
@@ -756,6 +757,7 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.icharger.get_chg_vinmin = pm8941_get_chg_vinmin,
 	.icharger.get_input_voltage_regulation =
 						pm8941_get_input_voltage_regulation,
+	.icharger.store_battery_charger_data = pm8941_store_battery_charger_data_emmc,
 	
 	.igauge.name = "pm8941",
 	.igauge.get_battery_voltage = pm8941_get_batt_voltage,
@@ -767,7 +769,19 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 #if defined(CONFIG_MACH_B2_WLJ)
 	.igauge.get_usb_temperature = pm8941_get_usb_temperature,
 	.igauge.usb_overheat_otg_mode_check = pm8941_usb_overheat_otg_mode_check,
-#endif
+	.igauge.store_battery_gauge_data = pm8941_bms_store_battery_gauge_data_emmc,
+	.igauge.store_battery_ui_soc = pm8941_bms_store_battery_ui_soc,
+	.igauge.get_battery_ui_soc = pm8941_bms_get_battery_ui_soc,
+	.igauge.enter_qb_mode = pm8941_bms_enter_qb_mode,
+	.igauge.exit_qb_mode = pm8941_bms_exit_qb_mode,
+	.igauge.qb_mode_pwr_consumption_check = pm8941_qb_mode_pwr_consumption_check,
+	.igauge.is_battery_temp_fault = pm8941_is_batt_temperature_fault,
+	.igauge.is_battery_full = pm8941_is_batt_full,
+	.igauge.get_attr_text = pm8941_gauge_get_attr_text,
+	.igauge.set_lower_voltage_alarm_threshold =
+						pm8941_batt_lower_alarm_threshold_set,
+	.igauge.check_soc_for_sw_ocv = pm8941_check_soc_for_sw_ocv,
+#else
 	.igauge.store_battery_data = pm8941_bms_store_battery_data_emmc,
 	.igauge.store_battery_ui_soc = pm8941_bms_store_battery_ui_soc,
 	.igauge.get_battery_ui_soc = pm8941_bms_get_battery_ui_soc,
@@ -776,6 +790,7 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.igauge.get_attr_text = pm8941_gauge_get_attr_text,
 	.igauge.set_lower_voltage_alarm_threshold =
 						pm8941_batt_lower_alarm_threshold_set,
+#endif
 	
 #ifdef CONFIG_HTC_PNPMGR
 	.notify_pnpmgr_charging_enabled = pnpmgr_battery_charging_enabled,
