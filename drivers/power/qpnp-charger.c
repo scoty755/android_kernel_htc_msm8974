@@ -3541,7 +3541,11 @@ static void handle_usb_present_change(struct qpnp_chg_chip *chip,
 		if (!usb_present) {
 			
 			if(board_mfg_mode() == 5)
+#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+				pm8941_bms_store_battery_data_emmc();
+#else
 				pm8941_bms_store_battery_gauge_data_emmc();
+#endif
 			qpnp_chg_usb_suspend_enable(chip, 1);
 			if (delayed_work_pending(&chip->resume_vddmax_configure_work))
 				__cancel_delayed_work(&chip->resume_vddmax_configure_work);

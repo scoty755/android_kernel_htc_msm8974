@@ -4116,6 +4116,7 @@ int pm8941_bms_get_percent_charge(struct qpnp_bms_chip *chip)
 	return soc;
 }
 
+#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
 int pm8941_bms_store_battery_gauge_data_emmc(void)
 {
 	if (!the_chip) {
@@ -4141,6 +4142,30 @@ int pm8941_bms_store_battery_gauge_data_emmc(void)
 
 	return 0;
 }
+
+#else
+int pm8941_bms_store_battery_data_emmc(void)
+{
+
+	
+	if (the_chip->store_batt_data_soc_thre > 0
+		&& store_emmc.store_soc > 0
+		&& store_emmc.store_soc <= the_chip->store_batt_data_soc_thre) {
+
+		emmc_misc_write(BMS_STORE_MAGIC_NUM, BMS_STORE_MAGIC_OFFSET);
+		emmc_misc_write(store_emmc.store_soc, BMS_STORE_SOC_OFFSET);
+		emmc_misc_write(store_emmc.store_ocv_uv, BMS_STORE_OCV_OFFSET);
+		emmc_misc_write(store_emmc.store_cc_uah, BMS_STORE_CC_OFFSET);
+		emmc_misc_write(store_emmc.store_currtime_ms, BMS_STORE_CURRTIME_OFFSET);
+
+		pr_debug("Stored soc=%d,OCV=%d,ori_cc_uah=%d,stored_cc_uah:%d,currtime_ms=%lu\n",
+			store_emmc.store_soc, store_emmc.store_ocv_uv, bms_dbg.ori_cc_uah,
+			store_emmc.store_cc_uah, store_emmc.store_currtime_ms);
+	}
+
+	return 0;
+}
+#endif
 
 int pm8941_bms_store_battery_ui_soc(int soc_ui)
 {

@@ -150,8 +150,8 @@ static int ac_suspend_flag;
 #endif
 static int htc_ext_5v_output_now;
 static int htc_ext_5v_output_old;
-#if defined(CONFIG_MACH_B2_WLJ)
 static bool qb_mode_enter = false;
+#if defined(CONFIG_MACH_B2_WLJ)
 static int pre_usb_temp;
 #endif
 
