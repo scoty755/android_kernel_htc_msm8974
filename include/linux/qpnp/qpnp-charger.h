@@ -55,8 +55,10 @@ int pm8941_get_charge_type(void);
 int pm8941_get_chg_usb_iusbmax(void);
 int pm8941_get_chg_vinmin(void);
 int pm8941_get_input_voltage_regulation(void);
+int pm8941_set_chg_curr_settled(int val);
 int pm8941_set_chg_vin_min(int val);
 int pm8941_set_chg_iusbmax(int val);
+int pm8941_get_chg_curr_settled(void);
 int pm8941_is_charger_ovp(int* result);
 int pm8941_set_hsml_target_ma(int target_ma);
 int pm8941_dump_all(void);
@@ -143,11 +145,19 @@ static inline int pm8941_get_chg_usb_iusbmax(void)
 {
 	return -ENXIO;
 }
+static inline int pm8941_get_chg_curr_settled(void)
+{
+	return -ENXIO;
+}
 static inline int pm8941_get_chg_vinmin(void)
 {
 	return -ENXIO;
 }
 static inline int pm8941_get_input_voltage_regulation(void)
+{
+	return -ENXIO;
+}
+static inline int pm8941_set_chg_curr_settled(int val)
 {
 	return -ENXIO;
 }

@@ -3207,6 +3207,12 @@ config MACH_M8_WL
         help
           Support for HTC MSM8974 M8_WL
 
+config MACH_B2_UL
+        depends on ARCH_MSM8974
+        bool "MSM8974 B2_UL"
+        help
+          Support for HTC MSM8974 B2_UL
+
 config MACH_B2_WLJ
         depends on ARCH_MSM8974
         bool "MSM8974 B2_WLJ"
