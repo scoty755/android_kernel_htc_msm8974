@@ -27,6 +27,14 @@
 #include <linux/msm_ssbi.h>
 #include <mach/msm_bus.h>
 
+#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+#define WLAN_RF_REG_ADDR_START_OFFSET   0x3
+#define WLAN_RF_REG_DATA_START_OFFSET   0xf
+#define WLAN_RF_READ_REG_CMD            0x3
+#define WLAN_RF_WRITE_REG_CMD           0x2
+#define WLAN_RF_READ_CMD_MASK           0x3fff
+#endif
+
 struct msm_camera_io_ext {
 	uint32_t mdcphy;
 	uint32_t mdcsz;
@@ -183,7 +191,13 @@ struct msm_gpio_set_tbl {
 };
 
 struct msm_camera_gpio_num_info {
+#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 	uint16_t gpio_num[7];
+#endif
+#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+	uint16_t gpio_num[20]; 
+#endif
+
 };
 
 struct msm_camera_gpio_conf {
