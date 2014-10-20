@@ -12,6 +12,7 @@
  */
 #include "msm_sensor.h"
 #define imx214_SENSOR_NAME "imx214"
+#define DUAL_CAL_OTP_SIZE 1024
 DEFINE_MSM_MUTEX(imx214_mut);
 
 static struct msm_sensor_ctrl_t imx214_s_ctrl;
@@ -155,6 +156,44 @@ static int imx214_sysfs_init(void)
 	return 0 ;
 }
 
+int32_t imx214_read_otp_memory(uint8_t *otpPtr, struct sensorb_cfg_data *cdata, struct msm_sensor_ctrl_t *s_ctrl)
+{
+	int32_t rc = 0;
+	uint16_t read_data = 0;
+	int page = 0, i = 0, j = 0;
+	short OTP_addr = 0x0A04;
+
+	
+	for (page = 0; page < 16; page++)
+	{
+        rc = s_ctrl->sensor_i2c_client->i2c_func_tbl->i2c_write(s_ctrl->sensor_i2c_client, 0x0A02, page, MSM_CAMERA_I2C_BYTE_DATA);
+        if (rc < 0)
+            pr_info("%s: i2c_write w 0x0A02 fail\n", __func__);
+
+        rc = s_ctrl->sensor_i2c_client->i2c_func_tbl->i2c_write(s_ctrl->sensor_i2c_client, 0x0A00, 0x01, MSM_CAMERA_I2C_BYTE_DATA);
+        if (rc < 0)
+            pr_info("%s: i2c_write w 0x0A00 fail\n", __func__);
+
+		for (i = 0; i < 64; i++) {
+			rc = s_ctrl->sensor_i2c_client->i2c_func_tbl->i2c_read(
+					s_ctrl->sensor_i2c_client,
+					OTP_addr,
+					&read_data,
+					MSM_CAMERA_I2C_BYTE_DATA);
+			if (rc < 0){
+				pr_err("%s: i2c_read 0x%x failed\n", __func__, OTP_addr);
+				return rc;
+			}
+			otpPtr[j] = read_data;
+			OTP_addr += 0x1;
+			j++;
+		}
+		OTP_addr = 0x0A04;
+	}
+	pr_info("%s: read OTP memory done\n", __func__);
+	return rc;
+}
+
 static int imx214_read_fuseid(struct sensorb_cfg_data *cdata,
 	struct msm_sensor_ctrl_t *s_ctrl)
 {
@@ -164,6 +203,12 @@ static int imx214_read_fuseid(struct sensorb_cfg_data *cdata,
     static int first= true;
     static uint8_t otp[18];
     int valid_layer = -1;
+    
+    static int read_otp = true;
+    uint8_t *path= "/data/OTPData.dat";
+    static uint8_t otp_mem[DUAL_CAL_OTP_SIZE];
+    struct file* f;
+    
 
     if (first)
     {
@@ -214,7 +259,32 @@ static int imx214_read_fuseid(struct sensorb_cfg_data *cdata,
                 break;
             }
         }
+        
+        pr_info("%s: read OTP for dual cam calibration\n", __func__);
+        imx214_read_otp_memory(otp_mem, cdata, s_ctrl);
+        if (rc<0) {
+            pr_err("%s: imx214_read_otp_memory failed %d\n", __func__, rc);
+            return rc;
+        }
+        
     }
+
+    if(cdata != NULL)
+    {
+    
+    if (read_otp)
+    {
+        f = msm_fopen (path, O_CREAT|O_RDWR|O_TRUNC, 0666);
+        if (f) {
+            msm_fwrite (f, 0, otp_mem, DUAL_CAL_OTP_SIZE);
+            msm_fclose (f);
+            pr_info ("%s: dump OTP memory successfully\n", __func__);
+        } else {
+            pr_err ("%s: fail to open file to write OTP memory\n", __func__);
+        }
+        read_otp = false;
+    }
+    
 
     cdata->cfg.fuse.fuse_id_word1 = 0;
     cdata->cfg.fuse.fuse_id_word2 = otp[0];
@@ -258,6 +328,15 @@ static int imx214_read_fuseid(struct sensorb_cfg_data *cdata,
 
     strlcpy(cdata->af_value.ACT_NAME, "lc898212_act", sizeof("lc898212_act"));
     pr_info("%s: OTP Actuator Name = %s\n",__func__, cdata->af_value.ACT_NAME);
+	}
+	else
+	{
+	    pr_info("%s: OTP Module vendor = 0x%x\n",               __func__,  otp[3]);
+	    pr_info("%s: OTP LENS = 0x%x\n",                        __func__,  otp[4]);
+	    pr_info("%s: OTP Sensor Version = 0x%x\n",              __func__,  otp[5]);
+	    pr_info("%s: OTP Driver IC Vendor & Version = 0x%x\n",  __func__,  otp[6]);
+	    pr_info("%s: OTP Actuator vender ID & Version = 0x%x\n",__func__,  otp[7]);
+	}
     return rc;
 
 }
@@ -296,11 +375,29 @@ static void __exit imx214_exit_module(void)
 	return;
 }
 
+int32_t imx214_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
+{
+	int32_t rc = 0;
+	int32_t rc1 = 0;
+	static int first = 0;
+	rc = msm_sensor_match_id(s_ctrl);
+	if(rc == 0)
+	{
+	    if(first == 0)
+	    {
+	        pr_info("%s read_fuseid\n",__func__);
+	        rc1 = imx214_read_fuseid(NULL, s_ctrl);
+	    }
+	}
+	first = 1;
+	return rc;
+}
+
 static struct msm_sensor_fn_t imx214_sensor_func_tbl = {
 	.sensor_config = msm_sensor_config,
 	.sensor_power_up = msm_sensor_power_up,
 	.sensor_power_down = msm_sensor_power_down,
-	.sensor_match_id = msm_sensor_match_id,
+	.sensor_match_id = imx214_sensor_match_id,
 	.sensor_i2c_read_fuseid = imx214_read_fuseid,
 };
 
