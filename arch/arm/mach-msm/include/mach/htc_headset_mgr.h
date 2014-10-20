@@ -370,6 +370,10 @@ struct htc_headset_mgr_info {
 	unsigned int onewire_key_delay;
 };
 
+#ifdef CONFIG_HTC_HEADSET_INT_REDETECT
+	int plugout_redetect;
+#endif
+
 int headset_notifier_register(struct headset_notifier *notifier);
 
 void headset_ext_detect(int type);
