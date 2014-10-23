@@ -431,7 +431,7 @@ int htc_gauge_event_notify(enum htc_gauge_event event)
 			msecs_to_jiffies(BATT_QB_MODE_REAL_POWEROFF_DELAY_MS));
 		break;
 	default:
-		pr_info("[BATT] unsupported gauge event(%d)\n", event);
+		pr_debug("[BATT] unsupported gauge event(%d)\n", event);
 		break;
 	}
 	return 0;
@@ -2225,7 +2225,7 @@ static void batt_worker(struct work_struct *work)
 	
 	if (critical_alarm_level < 0 && prev_chg_src > 0 &&
 			htc_batt_info.rep.charging_source == HTC_PWR_SOURCE_TYPE_BATT) {
-		pr_info("[BATT] critical_alarm_level: %d -> %d\n",
+		pr_debug("[BATT] critical_alarm_level: %d -> %d\n",
 				critical_alarm_level, htc_batt_info.critical_alarm_vol_cols - 1);
 		critical_alarm_level= htc_batt_info.critical_alarm_vol_cols - 1;
 		critical_alarm_level_set = critical_alarm_level + 1;
@@ -2257,7 +2257,7 @@ static void batt_worker(struct work_struct *work)
 			htc_batt_info.icharger->enable_5v_output(htc_ext_5v_output_now);
 			htc_ext_5v_output_old = htc_ext_5v_output_now;
 		}
-		pr_info("[BATT] enable_5v_output: %d\n", htc_ext_5v_output_now);
+		pr_debug("[BATT] enable_5v_output: %d\n", htc_ext_5v_output_now);
 	}
 
 	
@@ -2334,7 +2334,7 @@ static void batt_worker(struct work_struct *work)
 										htc_batt_info.rep.charging_source;
 
 		
-		pr_info("[BATT] prev_chg_src=%d, prev_chg_en=%d,"
+		pr_debug("[BATT] prev_chg_src=%d, prev_chg_en=%d,"
 				" chg_dis_reason/control/active=0x%x/0x%x/0x%x,"
 				" chg_limit_reason=0x%x,"
 				" iusb_limit_reason=0x%x,"
@@ -2426,7 +2426,7 @@ static void batt_worker(struct work_struct *work)
 	if (0 <= critical_alarm_level &&
 					critical_alarm_level < critical_alarm_level_set) {
 		critical_alarm_level_set = critical_alarm_level;
-		pr_info("[BATT] set voltage alarm level=%d\n", critical_alarm_level);
+		pr_debug("[BATT] set voltage alarm level=%d\n", critical_alarm_level);
 		htc_batt_info.igauge->set_lower_voltage_alarm_threshold(
 					htc_batt_info.critical_alarm_vol_ptr[critical_alarm_level]);
 		if (htc_batt_info.igauge->enable_lower_voltage_alarm)
@@ -2438,7 +2438,7 @@ static void batt_worker(struct work_struct *work)
 	prev_pwrsrc_enabled = pwrsrc_enabled;
 
 	wake_unlock(&htc_batt_timer.battery_lock);
-	pr_info("[BATT] %s: done\n", __func__);
+	pr_debug("[BATT] %s: done\n", __func__);
 	return;
 }
 
