@@ -58,6 +58,7 @@ static char formatting_dir;
 static unsigned char sig_blend = CTRL_ON;
 static DEFINE_MUTEX(iris_fm);
 
+#if !defined(CONFIG_MACH_B2_WLJ)
 const unsigned char MIN_TX_TONE_VAL = 0x00;
 const unsigned char MAX_TX_TONE_VAL = 0x07;
 const unsigned char MIN_HARD_MUTE_VAL = 0x00;
@@ -102,6 +103,7 @@ const signed char MIN_SINR_TH = -128;
 const signed char MAX_SINR_TH = 127;
 const unsigned char MIN_SINR_SAMPLES = 0x01;
 const unsigned char MAX_SINR_SAMPLES = 0xFF;
+#endif
 
 module_param(rds_buf, uint, 0);
 MODULE_PARM_DESC(rds_buf, "RDS buffer entries: *100*");
@@ -5062,6 +5064,7 @@ static const struct v4l2_ioctl_ops iris_ioctl_ops = {
 	.vidioc_g_ext_ctrls           = iris_vidioc_g_ext_ctrls,
 };
 
+#if !defined(CONFIG_MACH_B2_WLJ)
 static int is_initialized = 0;
 static int video_open(struct file *file) {
 	int retval;
@@ -5076,12 +5079,15 @@ static int video_open(struct file *file) {
 
 	return 0;
 }
+#endif
 
 static const struct v4l2_file_operations iris_fops = {
 	.owner = THIS_MODULE,
 	.unlocked_ioctl = video_ioctl2,
 	.release        = iris_fops_release,
+#if !defined(CONFIG_MACH_B2_WLJ)
 	.open = video_open,
+#endif
 };
 
 static struct video_device iris_viddev_template = {
@@ -5223,7 +5229,9 @@ static int __devexit iris_remove(struct platform_device *pdev)
 #ifdef CONFIG_VIDEO_PANASONIC
 	fm_ant_power_fullseg(0);
 #endif
+#if !defined(CONFIG_MACH_B2_WLJ)
 	hci_fm_smd_deregister();
+#endif
 
 	video_unregister_device(radio->videodev);
 
