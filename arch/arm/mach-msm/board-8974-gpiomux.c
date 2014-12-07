@@ -11,9 +11,6 @@
  *
  */
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-#include <linux/gpio.h>
-#endif
 #include <linux/init.h>
 #include <linux/ioport.h>
 #include <mach/board.h>
@@ -21,37 +18,48 @@
 #include <mach/gpiomux.h>
 #include <mach/socinfo.h>
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
 #define WLAN_CLK	40
 #define WLAN_SET	39
 #define WLAN_DATA0	38
 #define WLAN_DATA1	37
 #define WLAN_DATA2	36
-#endif
+
+#define WLAN_CLK	40
+#define WLAN_SET	39
+#define WLAN_DATA0	38
+#define WLAN_DATA1	37
+#define WLAN_DATA2	36
+
+#define WLAN_CLK	40
+#define WLAN_SET	39
+#define WLAN_DATA0	38
+#define WLAN_DATA1	37
+#define WLAN_DATA2	36
 
 static struct gpiomux_setting ap2mdm_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
-	.drv = GPIOMUX_DRV_8MA,
+	.drv = GPIOMUX_DRV_2MA,
 	.pull = GPIOMUX_PULL_NONE,
+	.dir = GPIOMUX_OUT_LOW,
 };
 
 static struct gpiomux_setting mdm2ap_status_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
-	.drv = GPIOMUX_DRV_8MA,
-	.pull = GPIOMUX_PULL_DOWN,
-	.dir = GPIOMUX_IN,
+	.drv = GPIOMUX_DRV_2MA,
+	.pull = GPIOMUX_PULL_NONE,
+	.dir = GPIOMUX_OUT_LOW,
 };
 
 static struct gpiomux_setting mdm2ap_errfatal_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
-	.drv = GPIOMUX_DRV_8MA,
-	.pull = GPIOMUX_PULL_DOWN,
-	.dir = GPIOMUX_IN,
+	.drv = GPIOMUX_DRV_2MA,
+	.pull = GPIOMUX_PULL_NONE,
+	.dir = GPIOMUX_OUT_LOW,
 };
 
 static struct gpiomux_setting mdm2ap_pblrdy = {
 	.func = GPIOMUX_FUNC_GPIO,
-	.drv = GPIOMUX_DRV_8MA,
+	.drv = GPIOMUX_DRV_2MA,
 	.pull = GPIOMUX_PULL_NONE,
 	.dir = GPIOMUX_IN,
 };
@@ -59,14 +67,16 @@ static struct gpiomux_setting mdm2ap_pblrdy = {
 
 static struct gpiomux_setting ap2mdm_soft_reset_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
-	.drv = GPIOMUX_DRV_8MA,
+	.drv = GPIOMUX_DRV_2MA,
 	.pull = GPIOMUX_PULL_NONE,
+	.dir = GPIOMUX_OUT_LOW,
 };
 
 static struct gpiomux_setting ap2mdm_wakeup = {
 	.func = GPIOMUX_FUNC_GPIO,
-	.drv = GPIOMUX_DRV_8MA,
-	.pull = GPIOMUX_PULL_DOWN,
+	.drv = GPIOMUX_DRV_2MA,
+	.pull = GPIOMUX_PULL_NONE,
+	.dir = GPIOMUX_OUT_LOW,
 };
 
 static struct msm_gpiomux_config mdm_configs[] __initdata = {
@@ -206,7 +216,6 @@ static struct gpiomux_setting wcnss_5wire_active_cfg = {
 	.pull = GPIOMUX_PULL_DOWN,
 };
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
 static struct gpiomux_setting wcnss_5gpio_suspend_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
 	.drv  = GPIOMUX_DRV_2MA,
@@ -218,7 +227,6 @@ static struct gpiomux_setting wcnss_5gpio_active_cfg = {
 	.drv  = GPIOMUX_DRV_6MA,
 	.pull = GPIOMUX_PULL_DOWN,
 };
-#endif
 
 static struct gpiomux_setting ath_gpio_active_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
@@ -1196,7 +1204,6 @@ static struct msm_gpiomux_config wcnss_5wire_interface[] = {
 	},
 };
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
 static struct msm_gpiomux_config wcnss_5gpio_interface[] = {
 	{
 		.gpio = 36,
@@ -1234,7 +1241,6 @@ static struct msm_gpiomux_config wcnss_5gpio_interface[] = {
 		},
 	},
 };
-#endif
 
 static struct msm_gpiomux_config ath_gpio_configs[] = {
 	{
@@ -1531,7 +1537,7 @@ void __init msm_8974_init_gpiomux(void)
 
 	msm_gpiomux_install(msm_cir_configs, ARRAY_SIZE(msm_cir_configs));
 
-	if (of_machine_pid() == 268)
+	if (of_machine_pid() == 268 || of_board_is_m8wlj())
 		msm_gpiomux_install(msm_felica_configs, ARRAY_SIZE(msm_felica_configs));
 
 	if (socinfo_get_platform_subtype() == PLATFORM_SUBTYPE_MDM)
@@ -1543,7 +1549,6 @@ void __init msm_8974_init_gpiomux(void)
 			ARRAY_SIZE(apq8074_dragonboard_ts_config));
 }
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
 static void wcnss_switch_to_gpio(void)
 {
 	
@@ -1646,4 +1651,3 @@ u32 wcnss_rf_read_reg(u32 rf_reg_addr)
 
 	return rf_data_received;
 }
-#endif

@@ -411,6 +411,10 @@ static int zram_bvec_write(struct zram *zram, struct bio_vec *bvec, u32 index,
 	page = bvec->bv_page;
 	src = meta->compress_buffer;
 
+	if (page == NULL){
+		ret = -EINVAL;
+		goto out;
+	}
 	if (is_partial_io(bvec)) {
 		uncmem = kmalloc(PAGE_SIZE, GFP_NOIO);
 		if (!uncmem) {

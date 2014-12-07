@@ -12,7 +12,6 @@
  */
 #include "msm_sensor.h"
 #define imx214_SENSOR_NAME "imx214"
-#define DUAL_CAL_OTP_SIZE 1024
 DEFINE_MSM_MUTEX(imx214_mut);
 
 static struct msm_sensor_ctrl_t imx214_s_ctrl;
@@ -203,12 +202,6 @@ static int imx214_read_fuseid(struct sensorb_cfg_data *cdata,
     static int first= true;
     static uint8_t otp[18];
     int valid_layer = -1;
-    
-    static int read_otp = true;
-    uint8_t *path= "/data/OTPData.dat";
-    static uint8_t otp_mem[DUAL_CAL_OTP_SIZE];
-    struct file* f;
-    
 
     if (first)
     {
@@ -259,14 +252,6 @@ static int imx214_read_fuseid(struct sensorb_cfg_data *cdata,
                 break;
             }
         }
-        
-        pr_info("%s: read OTP for dual cam calibration\n", __func__);
-        imx214_read_otp_memory(otp_mem, cdata, s_ctrl);
-        if (rc<0) {
-            pr_err("%s: imx214_read_otp_memory failed %d\n", __func__, rc);
-            return rc;
-        }
-        
     }
 
     if(cdata != NULL)
@@ -373,24 +358,6 @@ static void __exit imx214_exit_module(void)
 	} else
 		i2c_del_driver(&imx214_i2c_driver);
 	return;
-}
-
-int32_t imx214_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
-{
-	int32_t rc = 0;
-	int32_t rc1 = 0;
-	static int first = 0;
-	rc = msm_sensor_match_id(s_ctrl);
-	if(rc == 0)
-	{
-	    if(first == 0)
-	    {
-	        pr_info("%s read_fuseid\n",__func__);
-	        rc1 = imx214_read_fuseid(NULL, s_ctrl);
-	    }
-	}
-	first = 1;
-	return rc;
 }
 
 static struct msm_sensor_fn_t imx214_sensor_func_tbl = {

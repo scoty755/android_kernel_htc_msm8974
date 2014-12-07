@@ -71,7 +71,10 @@ enum htc_batt_rt_attr {
 	HTC_BATT_RT_CURRENT,
 	HTC_BATT_RT_TEMPERATURE,
 	HTC_BATT_RT_VOLTAGE_UV,
+#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
 	HTC_USB_RT_TEMPERATURE,
+#endif
+	HTC_BATT_RT_ID,
 };
 
 struct battery_info_reply {
@@ -112,6 +115,7 @@ struct htc_battery_core {
 	int (*func_set_chg_property)(enum power_supply_property, int val);
 	void (*func_trigger_store_battery_data)(int trigger_flag);
 	void (*func_qb_mode_shutdown_status)(int trigger_flag);
+	int (*func_ftm_charger_control)(enum ftm_charger_control_flag);
 };
 #ifdef CONFIG_HTC_BATT_CORE
 void htc_battery_update_batt_uevent(void);

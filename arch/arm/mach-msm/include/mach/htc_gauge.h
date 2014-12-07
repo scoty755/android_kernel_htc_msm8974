@@ -34,9 +34,9 @@ struct htc_gauge {
 	int (*get_battery_current)(int *result);
 	int (*get_battery_temperature)(int *result);
 	int (*get_battery_id)(int *result);
+	int (*get_battery_id_mv)(int *result);
 	int (*get_battery_soc)(int *result);
 	int (*get_battery_cc)(int *result);
-	int (*store_battery_data)(void);
 	int (*get_usb_temperature)(int *result);
 	int (*usb_overheat_otg_mode_check)(void);
 	int (*store_battery_gauge_data)(void);

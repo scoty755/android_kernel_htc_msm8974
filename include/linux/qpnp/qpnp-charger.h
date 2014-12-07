@@ -25,7 +25,7 @@
 #define CHARGER_STORE_MAGIC_NUM		0xDDAACC00
 #define BATTERY_HBOOT_MAGIC_NUM		0xDDAACC11
 #define CHARGER_STORE_MAGIC_OFFSET		1056	
-#define CHARGER_STORE_PRE_DELTA_VDDMAX_OFFSET	1080
+#define CHARGER_STORE_PRE_DELTA_VDDMAX_OFFSET	1080	
 
 struct ext_usb_chg_pm8941 {
 	const char	*name;
@@ -53,12 +53,12 @@ int pm8941_get_charging_source(int *result);
 int pm8941_get_charging_enabled(int *result);
 int pm8941_get_charge_type(void);
 int pm8941_get_chg_usb_iusbmax(void);
+int pm8941_get_chg_curr_settled(void);
 int pm8941_get_chg_vinmin(void);
 int pm8941_get_input_voltage_regulation(void);
 int pm8941_set_chg_curr_settled(int val);
 int pm8941_set_chg_vin_min(int val);
 int pm8941_set_chg_iusbmax(int val);
-int pm8941_get_chg_curr_settled(void);
 int pm8941_is_charger_ovp(int* result);
 int pm8941_set_hsml_target_ma(int target_ma);
 int pm8941_dump_all(void);
@@ -81,6 +81,7 @@ int pm8941_is_chg_safety_timer_timeout(int *result);
 int pm8941_get_usb_temperature(int *result);
 int pm8941_store_battery_charger_data_emmc(void);
 int pm8941_usb_overheat_otg_mode_check(void);
+int pm8941_set_ftm_charge_enable_type(enum htc_ftm_power_source_type ftm_src);
 #endif
 #else 
 #ifdef CONFIG_HTC_BATT_8960
@@ -232,6 +233,10 @@ static inline int pm8941_store_battery_charger_data_emmc(void)
 	return -ENXIO;
 }
 static inline int pm8941_usb_overheat_otg_mode_check(void)
+{
+	return -ENXIO;
+}
+static inline int pm8941_set_ftm_charge_enable_type(enum htc_ftm_power_source_type ftm_src)
 {
 	return -ENXIO;
 }

@@ -46,6 +46,14 @@ enum charger_control_flag {
 	END_CHARGER
 };
 
+enum ftm_charger_control_flag {
+	FTM_ENABLE_CHARGER = 0,
+	FTM_STOP_CHARGER,
+	FTM_FAST_CHARGE,
+	FTM_SLOW_CHARGE,
+	FTM_END_CHARGER
+};
+
 #define HTC_BATT_CHG_LIMIT_BIT_TALK				(1)
 #define HTC_BATT_CHG_LIMIT_BIT_NAVI				(1<<1)
 #define HTC_BATT_CHG_LIMIT_BIT_THRML				(1<<2)
