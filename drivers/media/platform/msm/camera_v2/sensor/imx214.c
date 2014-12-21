@@ -12,38 +12,43 @@
  */
 #include "msm_sensor.h"
 #define imx214_SENSOR_NAME "imx214"
+#define DUAL_CAL_OTP_SIZE 1024
+static uint8_t otp[18];
+static uint8_t otp_mem[DUAL_CAL_OTP_SIZE];
 DEFINE_MSM_MUTEX(imx214_mut);
 
 static struct msm_sensor_ctrl_t imx214_s_ctrl;
 
 static struct msm_sensor_power_setting imx214_power_setting[] = {
+#ifdef CONFIG_REGULATOR_NCP6924
 	{
 		.seq_type = SENSOR_GPIO,
-		.seq_val = SENSOR_GPIO_STANDBY,
+		.seq_val = SENSOR_GPIO_STANDBY,  
 		.config_val = GPIO_OUT_HIGH,
 		.delay = 1,
 	},
+#endif
 	{
-		.seq_type = SENSOR_VREG_NCP6924,
-		.seq_val = NCP6924_VDIG,
+		.seq_type = SENSOR_VREG,
+		.seq_val = CAM_VDIG,
 		.config_val = 1,
 		.delay = 1,
 	},
 	{
-		.seq_type = SENSOR_VREG_NCP6924,
-		.seq_val = NCP6924_VANA,
+		.seq_type = SENSOR_VREG,
+		.seq_val = CAM_VANA,
 		.config_val = 1,
 		.delay = 1,
 	},
 	{
-		.seq_type = SENSOR_VREG_NCP6924,
-		.seq_val = NCP6924_VIO,
+		.seq_type = SENSOR_VREG,
+		.seq_val = CAM_VIO,
 		.config_val = 1,
 		.delay = 1,
 	},
 	{
-		.seq_type = SENSOR_VREG_NCP6924,
-		.seq_val = NCP6924_VAF,
+		.seq_type = SENSOR_VREG,
+		.seq_val = CAM_VAF,
 		.config_val = 1,
 		.delay = 1,
 	},
@@ -131,6 +136,19 @@ static ssize_t sensor_vendor_show(struct device *dev,
 
 static DEVICE_ATTR(sensor, 0444, sensor_vendor_show, NULL);
 
+static ssize_t otp_info_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	ssize_t ret = 0;
+
+	sprintf(buf, "%02X%02X%02X%02X%02X\n", otp[3],otp[4],otp[5],otp[6],otp[7]);
+	ret = strlen(buf) + 1;
+
+	return ret;
+}
+
+static DEVICE_ATTR(otp_info, 0444, otp_info_show, NULL);
+
 static struct kobject *android_imx214;
 
 static int imx214_sysfs_init(void)
@@ -150,6 +168,12 @@ static int imx214_sysfs_init(void)
 		pr_info("imx214_sysfs_init: sysfs_create_file " \
 		"failed\n");
 		kobject_del(android_imx214);
+	}
+
+	ret = sysfs_create_file(android_imx214, &dev_attr_otp_info.attr);
+	if (ret) {
+		pr_info("imx214_sysfs_init: sysfs_create_file " \
+		"failed\n");
 	}
 
 	return 0 ;
@@ -200,8 +224,12 @@ static int imx214_read_fuseid(struct sensorb_cfg_data *cdata,
     int32_t i = 0, j = 0;
     uint16_t read_data = 0;
     static int first= true;
-    static uint8_t otp[18];
     int valid_layer = -1;
+    
+    static int read_otp = true;
+    uint8_t *path= "/data/OTPData.dat";
+    struct file* f;
+    
 
     if (first)
     {
@@ -252,6 +280,23 @@ static int imx214_read_fuseid(struct sensorb_cfg_data *cdata,
                 break;
             }
         }
+
+  for(i=0; i<5; i++)
+      s_ctrl->sensordata->sensor_info->OTP_INFO[i] = otp[3+i];
+
+  s_ctrl->sensordata->sensor_info->fuse_id[0] = 0;
+  s_ctrl->sensordata->sensor_info->fuse_id[1] = otp[0];
+  s_ctrl->sensordata->sensor_info->fuse_id[2] = otp[1];
+  s_ctrl->sensordata->sensor_info->fuse_id[3] = otp[2];
+
+        
+        pr_info("%s: read OTP for dual cam calibration\n", __func__);
+        imx214_read_otp_memory(otp_mem, cdata, s_ctrl);
+        if (rc<0) {
+            pr_err("%s: imx214_read_otp_memory failed %d\n", __func__, rc);
+            return rc;
+        }
+        
     }
 
     if(cdata != NULL)
@@ -358,6 +403,24 @@ static void __exit imx214_exit_module(void)
 	} else
 		i2c_del_driver(&imx214_i2c_driver);
 	return;
+}
+
+int32_t imx214_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
+{
+	int32_t rc = 0;
+	int32_t rc1 = 0;
+	static int first = 0;
+	rc = msm_sensor_match_id(s_ctrl);
+	if(rc == 0)
+	{
+	    if(first == 0)
+	    {
+	        pr_info("%s read_fuseid\n",__func__);
+	        rc1 = imx214_read_fuseid(NULL, s_ctrl);
+	        first = 1;
+	    }
+	}
+	return rc;
 }
 
 static struct msm_sensor_fn_t imx214_sensor_func_tbl = {
