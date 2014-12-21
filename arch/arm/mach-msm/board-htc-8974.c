@@ -557,7 +557,6 @@ static void htc_8974_add_usb_devices(void)
 	if (board_mfg_mode() == 0) {
 		android_usb_pdata.nluns = 1;
 		android_usb_pdata.cdrom_lun = 0x1;
-#endif
 	}
 #ifdef CONFIG_MACH_M8
 	android_usb_pdata.product_id	= 0x061A;
@@ -669,6 +668,7 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 #if defined(CONFIG_MACH_B2_WLJ)
 	.chg_limit_active_mask = HTC_BATT_CHG_LIMIT_BIT_TALK |
 								HTC_BATT_CHG_LIMIT_BIT_NAVI |
+								HTC_BATT_CHG_LIMIT_BIT_KDDI |
 								HTC_BATT_CHG_LIMIT_BIT_THRML,
 #else
 	.chg_limit_active_mask = HTC_BATT_CHG_LIMIT_BIT_TALK |
@@ -693,7 +693,6 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.usb_temp_overheat_threshold = 650,
 #endif
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
 	.icharger.name = "pm8941",
 	.icharger.get_charging_source = pm8941_get_charging_source,
 	.icharger.get_charging_enabled = pm8941_get_charging_enabled,
@@ -725,6 +724,7 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 						pm8941_get_input_voltage_regulation,
 	.icharger.store_battery_charger_data = pm8941_store_battery_charger_data_emmc,
 	
+#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
 	.icharger.name = "pm8941",
 	.icharger.get_charging_source = pm8941_get_charging_source,
 	.icharger.get_charging_enabled = pm8941_get_charging_enabled,
@@ -755,6 +755,7 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 						pm8941_get_input_voltage_regulation,
 	.icharger.store_battery_charger_data = pm8941_store_battery_charger_data_emmc,
 	.icharger.set_ftm_charge_enable_type = pm8941_set_ftm_charge_enable_type,
+#endif
 	
 	.igauge.name = "pm8941",
 	.igauge.get_battery_voltage = pm8941_get_batt_voltage,

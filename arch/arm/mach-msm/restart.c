@@ -66,8 +66,6 @@ extern int get_partition_num_by_name(char *name);
 #define PN547_I2C_POWEROFF_SEQUENCE_FOR_EYE
 #elif defined(CONFIG_MACH_B2_UL)
 #define PN547_I2C_POWEROFF_SEQUENCE_FOR_B2
-#else
-#else
 #endif
 
 

@@ -11,6 +11,7 @@
  *
  */
 
+#include <linux/gpio.h>
 #include <linux/init.h>
 #include <linux/ioport.h>
 #include <mach/board.h>
