@@ -569,10 +569,8 @@ static void htc_8974_add_usb_devices(void)
 	android_usb_pdata.product_id	= 0x0642;
 #elif defined(CONFIG_MACH_B2_UL)
 	android_usb_pdata.product_id	= 0x0642;
-	platform_device_register(&android_usb_device);
 #elif defined(CONFIG_MACH_B2_WLJ)
 	android_usb_pdata.product_id	= 0x0634;
-	platform_device_register(&android_usb_device);
 #endif
 
 	if (strcmp("0PFH20000", mid)==0)
@@ -582,7 +580,7 @@ static void htc_8974_add_usb_devices(void)
 
 	platform_device_register(&android_usb_device);
 }
-#if (defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DUMMY))
+#if defined(CONFIG_MACH_DUMMY)
 static ssize_t syn_vkeys_show(struct kobject *kobj,
 			struct kobj_attribute *attr, char *buf)
 {
@@ -724,39 +722,6 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 						pm8941_get_input_voltage_regulation,
 	.icharger.store_battery_charger_data = pm8941_store_battery_charger_data_emmc,
 	
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-	.icharger.name = "pm8941",
-	.icharger.get_charging_source = pm8941_get_charging_source,
-	.icharger.get_charging_enabled = pm8941_get_charging_enabled,
-	.icharger.set_charger_enable = pm8941_charger_enable,
-	.icharger.set_pwrsrc_enable = pm8941_pwrsrc_enable,
-	.icharger.set_pwrsrc_and_charger_enable =
-						pm8941_set_pwrsrc_and_charger_enable,
-	.icharger.set_limit_charge_enable = pm8941_limit_charge_enable,
-	.icharger.set_limit_input_current = pm8941_limit_input_current,
-	.icharger.set_chg_iusbmax = pm8941_set_chg_iusbmax,
-	.icharger.set_chg_vin_min = pm8941_set_chg_vin_min,
-	.icharger.is_ovp = pm8941_is_charger_ovp,
-	.icharger.is_batt_temp_fault_disable_chg =
-						pm8941_is_batt_temp_fault_disable_chg,
-	.icharger.is_under_rating = pm8921_is_pwrsrc_under_rating,
-	.icharger.charger_change_notifier_register =
-						cable_detect_register_notifier,
-	.icharger.dump_all = pm8941_dump_all,
-	.icharger.is_safty_timer_timeout = pm8941_is_chg_safety_timer_timeout,
-	.icharger.get_attr_text = pm8941_charger_get_attr_text,
-	.icharger.max_input_current = pm8941_set_hsml_target_ma,
-	.icharger.is_battery_full_eoc_stop = pm8941_is_batt_full_eoc_stop,
-	.icharger.get_charge_type = pm8941_get_charge_type,
-	.icharger.get_chg_usb_iusbmax = pm8941_get_chg_usb_iusbmax,
-	.icharger.get_chg_curr_settled = pm8941_get_chg_curr_settled,
-	.icharger.get_chg_vinmin = pm8941_get_chg_vinmin,
-	.icharger.get_input_voltage_regulation =
-						pm8941_get_input_voltage_regulation,
-	.icharger.store_battery_charger_data = pm8941_store_battery_charger_data_emmc,
-	.icharger.set_ftm_charge_enable_type = pm8941_set_ftm_charge_enable_type,
-#endif
-	
 	.igauge.name = "pm8941",
 	.igauge.get_battery_voltage = pm8941_get_batt_voltage,
 	.igauge.get_battery_current = pm8941_bms_get_batt_current,
@@ -765,9 +730,11 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.igauge.get_battery_id_mv = pm8941_get_batt_id_mv,
 	.igauge.get_battery_soc = pm8941_bms_get_batt_soc,
 	.igauge.get_battery_cc = pm8941_bms_get_batt_cc,
+#if 0
 #if defined(CONFIG_MACH_B2_WLJ)
 	.igauge.get_usb_temperature = pm8941_get_usb_temperature,
 	.igauge.usb_overheat_otg_mode_check = pm8941_usb_overheat_otg_mode_check,
+#endif
 #endif
 	.igauge.store_battery_gauge_data = pm8941_bms_store_battery_gauge_data_emmc,
 	.igauge.store_battery_ui_soc = pm8941_bms_store_battery_ui_soc,
@@ -828,7 +795,7 @@ void __init htc_8974_add_drivers(void)
 	htc_batt_cell_register();
 	msm8974_add_batt_devices();
 #endif 
-#if (defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DUMMY))
+#if defined(CONFIG_MACH_DUMMY)
 	syn_init_vkeys_8974();
 #endif
 	htc_8974_cable_detect_register();

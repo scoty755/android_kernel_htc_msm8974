@@ -156,7 +156,7 @@ static int ac_suspend_flag;
 static int htc_ext_5v_output_now;
 static int htc_ext_5v_output_old;
 static bool qb_mode_enter = false;
-#if defined(CONFIG_MACH_B2_WLJ)
+#if defined(CONFIG_MACH_DUMMY)
 static int pre_usb_temp;
 #endif
 
@@ -459,7 +459,7 @@ int htc_charger_event_notify(enum htc_charger_event event)
 		htc_ext_5v_output_now = 1;
 		BATT_LOG("%s htc_ext_5v_output_now:%d", __func__, htc_ext_5v_output_now);
 		htc_batt_schedule_batt_info_update();
-#if defined(CONFIG_MACH_B2_WLJ)
+#if defined(CONFIG_MACH_DUMMY)
 		cancel_delayed_work_sync(&htc_batt_timer.usb_overheat_monitor_work);
 		wake_lock(&htc_batt_timer.usb_overheat_monitor_lock);
 		htc_batt_info.igauge->get_usb_temperature(&htc_batt_info.rep.usb_temp);
@@ -474,7 +474,7 @@ int htc_charger_event_notify(enum htc_charger_event event)
 		latest_chg_src = CHARGER_BATTERY;
 		htc_ext_5v_output_now = 0;
 		BATT_LOG("%s htc_ext_5v_output_now:%d", __func__, htc_ext_5v_output_now);
-#if defined(CONFIG_MACH_B2_WLJ)
+#if defined(CONFIG_MACH_DUMMY)
 		htc_batt_info.rep.usb_overheat = 0;
 		if (delayed_work_pending(&htc_batt_timer.usb_overheat_monitor_work))
 			cancel_delayed_work_sync(&htc_batt_timer.usb_overheat_monitor_work);
@@ -489,7 +489,7 @@ int htc_charger_event_notify(enum htc_charger_event event)
 			cancel_delayed_work_sync(&htc_batt_timer.unknown_usb_detect_work);
 			wake_unlock(&htc_batt_timer.unknown_usb_detect_lock);
 		}
-#if defined(CONFIG_MACH_B2_WLJ)
+#if defined(CONFIG_MACH_DUMMY)
 		htc_batt_info.rep.usb_overheat = 0;
 		if (delayed_work_pending(&htc_batt_timer.usb_overheat_monitor_work))
 			cancel_delayed_work_sync(&htc_batt_timer.usb_overheat_monitor_work);
@@ -555,7 +555,7 @@ int htc_charger_event_notify(enum htc_charger_event event)
 	case HTC_CHARGER_EVENT_SRC_CABLE_INSERT_NOTIFY:
 		latest_chg_src = CHARGER_NOTIFY;
 		htc_batt_schedule_batt_info_update();
-#if defined(CONFIG_MACH_B2_WLJ)
+#if defined(CONFIG_MACH_DUMMY)
 		cancel_delayed_work_sync(&htc_batt_timer.usb_overheat_monitor_work);
 		wake_lock(&htc_batt_timer.usb_overheat_monitor_lock);
 		htc_batt_info.igauge->get_usb_temperature(&htc_batt_info.rep.usb_temp);
@@ -1188,7 +1188,7 @@ static int htc_battery_get_rt_attr(enum htc_batt_rt_attr attr, int *val)
 			*val *= 1000;
 		}
 		break;
-#if defined(CONFIG_MACH_B2_WLJ)
+#if defined(CONFIG_MACH_DUMMY)
 	case HTC_USB_RT_TEMPERATURE:
 		if (htc_batt_info.igauge->get_usb_temperature) {
 			ret = htc_batt_info.igauge->get_usb_temperature(val);
@@ -1723,7 +1723,7 @@ static void batt_check_overload(unsigned long time_since_last_update_ms)
 	}
 }
 
-#if defined(CONFIG_MACH_B2_WLJ)
+#if defined(CONFIG_MACH_DUMMY)
 static void batt_monitor_usb_overheat(int usb_temp)
 {
 	static int first = 1;
@@ -2069,7 +2069,7 @@ static void batt_update_limited_charge(void)
 			
 		}
 	} else {
-#if !(defined(CONFIG_MACH_B2_WLJ))
+#if !(defined(CONFIG_MACH_DUMMY))
 		
 		if ((!(chg_limit_reason & HTC_BATT_CHG_LIMIT_BIT_THRML)) &&
 				htc_batt_info.rep.batt_temp > 390) {
@@ -2822,7 +2822,7 @@ static void htc_battery_fb_register(struct work_struct *work)
 }
 #endif
 
-#if defined(CONFIG_MACH_B2_WLJ)
+#if defined(CONFIG_MACH_DUMMY)
 static void usb_overheat_monitor(struct work_struct *work)
 {
 	

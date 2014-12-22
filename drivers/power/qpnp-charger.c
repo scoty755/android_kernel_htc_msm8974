@@ -4553,7 +4553,7 @@ static void dump_all(int more)
 	tbat_deg = get_prop_batt_temp(the_chip)/10;
 	if (tbat_deg >= 68)
 		pr_warn("battery temperature=%d >= 68\n", tbat_deg);
-#if defined(CONFIG_MACH_B2_WLJ)
+#if defined(CONFIG_MACH_DUMMY)
 	usb_temp = (int)read_usb_temperature_mpp2(the_chip);
 	usb_temp_vol = (int)read_usb_temperature_mpp2_vol(the_chip);
 #else
@@ -4647,7 +4647,7 @@ int pm8941_is_batt_full_eoc_stop(int *result)
 int pm8941_charger_get_attr_text(char *buf, int size)
 {
 	int rc;
-#if defined(CONFIG_MACH_B2_WLJ)
+#if defined(CONFIG_MACH_DUMMY)
 	int usb_temp, usb_temp_vol;
 #endif
 	struct qpnp_vadc_result result;
@@ -4737,7 +4737,7 @@ int pm8941_charger_get_attr_text(char *buf, int size)
 	}
 	len += scnprintf(buf + len, size - len,
 			"USBIN(uV): %d;\n", (int)result.physical);
-#if defined(CONFIG_MACH_B2_WLJ)
+#if defined(CONFIG_MACH_DUMMY)
 	usb_temp = (int)read_usb_temperature_mpp2(the_chip);
 	usb_temp_vol = (int)read_usb_temperature_mpp2_vol(the_chip);
 	len += scnprintf(buf + len, size - len, "usb_temperature: %d;\n", usb_temp);
@@ -5071,7 +5071,7 @@ module_param_call(thermal_mitigation, set_therm_mitigation_level,
 					param_get_uint,
 					&thermal_mitigation, 0644);
 
-#if defined(CONFIG_MACH_B2_WLJ)
+#if defined(CONFIG_MACH_DUMMY)
 static int32_t pm8941_adc_map_temp_voltage(const struct qpnp_vadc_map_pt *pts,
 		uint32_t tablesize, int32_t input, int64_t *output)
 {

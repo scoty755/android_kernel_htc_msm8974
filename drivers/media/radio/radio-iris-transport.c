@@ -197,7 +197,6 @@ static void radio_hci_smd_deregister(void)
 	hs.fm_channel = 0;
 }
 
-#if !defined(CONFIG_MACH_B2_WLJ)
 #ifdef MODULE
 static int __init radio_hci_smd_init(void)
 {
@@ -222,19 +221,6 @@ int hci_fm_smd_register(void) {
 void hci_fm_smd_deregister(void) {
 	radio_hci_smd_deregister();
 }
-#endif
-#else
-static int radio_hci_smd_init(void)
-{
-	return radio_hci_smd_register_dev(&hs);
-}
-module_init(radio_hci_smd_init);
-
-static void __exit radio_hci_smd_exit(void)
-{
-	radio_hci_smd_deregister();
-}
-module_exit(radio_hci_smd_exit);
 #endif
 
 MODULE_DESCRIPTION("Bluetooth SMD driver");
