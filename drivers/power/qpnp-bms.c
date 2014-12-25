@@ -1346,10 +1346,12 @@ static int get_rbatt(struct qpnp_bms_chip *chip,
 	}
 	
 	
+#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 	if (soc_rbatt_mohm > 100)
 		scalefactor = interpolate_scalingfactor(chip->rbatt_sf_lut,
 							batt_temp, 100);
 	else
+#endif
 	scalefactor = interpolate_scalingfactor(chip->rbatt_sf_lut,
 						batt_temp, soc_rbatt_mohm);
 	bms_dbg.rbatt_sf = scalefactor;
@@ -4002,6 +4004,23 @@ static int dump_all(void)
 
 	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
 		"cc(uAh)=%d,", bms_dbg.cc_uah);
+#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
+		"qb_start_ocv_uV=%d,", qb_mode_ocv_start);
+	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
+		"qb_start_cc_uAh=%d,", qb_mode_cc_start);
+	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
+		"qb_prev_cc_uAh=%d,", qb_mode_prev_cc);
+	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
+		"qb_cc_accumulate_uAh=%d,", qb_mode_cc_accumulation_uah);
+	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
+		"qb_time_accumulate_us=%lu,", qb_mode_time_accumulation);
+	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
+		"qb_cc_criteria_uAh=%d,", the_chip->qb_mode_cc_criteria_uAh);
+	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
+		"over_cc_criteria_count=%d,", qb_mode_over_criteria_count);
+	get_bms_reg((void *)SOC_STORAGE_REG, &val);
+#endif
 	get_bms_reg((void *)SOC_STORAGE_REG, &val);
 	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
 		"SOC_STORAGE_REG=0x%lld,", val);
@@ -5535,7 +5554,28 @@ static int __devinit qpnp_bms_probe(struct spmi_device *spmi)
 	device_init_wakeup(&spmi->dev, 1);
 
 	load_shutdown_data(chip);
+#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+	if (chip->criteria_sw_est_ocv)
+		chip->criteria_sw_est_ocv = FIRST_SW_EST_OCV_THR_MS;
 
+	if (chip->enable_fcc_learning) {
+		if (chip->battery_removed) {
+			rc = discard_backup_fcc_data(chip);
+			if (rc)
+				pr_err("Could not discard backed-up FCC data\n");
+		} else {
+			rc = read_chgcycle_data_from_backup(chip);
+			if (rc)
+				pr_err("Unable to restore charge-cycle data\n");
+
+			rc = read_fcc_data_from_backup(chip);
+			if (rc)
+				pr_err("Unable to restore FCC-learning data\n");
+			else
+				attempt_learning_new_fcc(chip);
+		}
+	}
+#else
 	if (chip->enable_fcc_learning) {
 			pr_info("Re-store the FCC data!\n");
 			rc = read_chgcycle_data_from_backup(chip);
@@ -5548,6 +5588,7 @@ static int __devinit qpnp_bms_probe(struct spmi_device *spmi)
 			else
 				attempt_learning_new_fcc(chip);
 	}
+#endif
 
 #if !(defined(CONFIG_HTC_BATT_8960))
 	rc = setup_vbat_monitoring(chip);
