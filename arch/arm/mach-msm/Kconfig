@@ -3197,8 +3197,3 @@ config HTC_DEBUG_RBCPR_8226
     default n
     bool "HTC RBCPR debug"
 
-config HTC_MONITOR_SUBSYS_SLEEP_TIME
-    default n
-    bool "Monitor the sleep time of sub-system"
-    help
-        Support to monitor the sleep time of sub-system

@@ -87,11 +87,6 @@ static inline int pm8941_bms_get_attr_text(char *buf, int size)
 {
 	return -ENXIO;
 }
-
-static inline int pm8941_bms_store_battery_data_emmc(void)
-{
-	return -ENXIO;
-}
 static inline int pm8941_bms_store_battery_gauge_data_emmc(void)
 {
 	return -ENXIO;

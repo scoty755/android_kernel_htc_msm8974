@@ -668,7 +668,6 @@ static void mic_detect_work_func(struct work_struct *work)
 					new_state = BIT_HEADSET | BIT_HEADSET_NO_MIC;
 				}
 				HS_LOG("old_state = 0x%x, new_state = 0x%x", old_state, new_state);
-				switch_set_state(&hi->sdev_h2w, old_state & ~MASK_35MM_HEADSET);
 				switch_set_state(&hi->sdev_h2w, new_state);
 				hi->hs_35mm_type = HEADSET_ONEWIRE;
 				mutex_unlock(&hi->mutex_lock);
@@ -697,7 +696,6 @@ static void mic_detect_work_func(struct work_struct *work)
 		enable_metrico_headset(1);
 
 	if (mic == HEADSET_UNKNOWN_MIC || mic == HEADSET_UNPLUG) {
-		mutex_unlock(&hi->mutex_lock);
 		if (hi->mic_detect_counter--) {
 			mutex_unlock(&hi->mutex_lock);
 			queue_delayed_work(detect_wq, &mic_detect_work,
@@ -713,7 +711,6 @@ static void mic_detect_work_func(struct work_struct *work)
 			return;
 #endif
 		}
-		return;
 	}
 
 	if (hi->hs_35mm_type == HEADSET_UNSTABLE && hi->mic_detect_counter--) {
@@ -2287,7 +2284,6 @@ static int headset_mgr_parser_dt(struct htc_hs_mgr_data *mgr)
     HS_LOG("DT:Headset type number = %d",htc_headset_mgr_data.headset_config_num);
 
 	hs_list = kzalloc(htc_headset_mgr_data.headset_config_num * sizeof(u32) * 3, GFP_KERNEL);
-	hs_typelist = kzalloc(htc_headset_mgr_data.headset_config_num * sizeof(struct headset_adc_config), GFP_KERNEL);
 	if (hs_list == NULL) {
 		HS_LOG("headset list alloc memry fail");
 		return -ENOMEM;

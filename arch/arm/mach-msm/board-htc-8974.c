@@ -535,7 +535,6 @@ static struct android_usb_platform_data android_usb_pdata = {
 #ifdef CONFIG_MACH_M8_WL
 	.match = m8wl_usb_product_id_match,
 #endif
-
 	.nluns = 1,
 	.cdrom_lun = 0x1,
 	.vzw_unmount_cdrom = 0,
@@ -580,7 +579,7 @@ static void htc_8974_add_usb_devices(void)
 
 	platform_device_register(&android_usb_device);
 }
-#if defined(CONFIG_MACH_DUMMY)
+#if (defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DUMMY))
 static ssize_t syn_vkeys_show(struct kobject *kobj,
 			struct kobj_attribute *attr, char *buf)
 {
@@ -721,6 +720,7 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.icharger.get_input_voltage_regulation =
 						pm8941_get_input_voltage_regulation,
 	.icharger.store_battery_charger_data = pm8941_store_battery_charger_data_emmc,
+	.icharger.set_ftm_charge_enable_type = pm8941_set_ftm_charge_enable_type,
 	
 	.igauge.name = "pm8941",
 	.igauge.get_battery_voltage = pm8941_get_batt_voltage,
@@ -793,7 +793,7 @@ void __init htc_8974_add_drivers(void)
 	htc_batt_cell_register();
 	msm8974_add_batt_devices();
 #endif 
-#if defined(CONFIG_MACH_DUMMY)
+#if (defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DUMMY))
 	syn_init_vkeys_8974();
 #endif
 	htc_8974_cable_detect_register();
