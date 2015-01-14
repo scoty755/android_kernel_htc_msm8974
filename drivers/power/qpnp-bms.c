@@ -1174,6 +1174,17 @@ static int read_soc_params_raw(struct qpnp_bms_chip *chip,
 		convert_and_store_ocv(chip, raw, batt_temp, false);
 		
 		htc_batt_bms_timer.no_ocv_update_period_ms = 0;
+#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+		if(chip->criteria_sw_est_ocv == FIRST_SW_EST_OCV_THR_MS) {
+			rc = of_property_read_u32(chip->spmi->dev.of_node,
+				"qcom,criteria-sw-est-ocv",
+				&chip->criteria_sw_est_ocv);
+			if (rc) {
+				pr_err("err:%d, criteria-sw-est-ocv missing in dt, set default value\n", rc);
+				chip->criteria_sw_est_ocv = DEFAULT_SW_EST_OCV_THR_MS;
+			}
+		}
+#endif
 		
 		chip->last_cc_uah = INT_MIN;
 
@@ -1758,6 +1769,27 @@ static int pm8941_bms_estimate_ocv(void)
 #endif
 		
 		htc_batt_bms_timer.no_ocv_update_period_ms = 0;
+#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+		if(the_chip->criteria_sw_est_ocv == FIRST_SW_EST_OCV_THR_MS) {
+			rc = of_property_read_u32(the_chip->spmi->dev.of_node,
+				"qcom,criteria-sw-est-ocv",
+				&the_chip->criteria_sw_est_ocv);
+			if (rc) {
+				pr_err("err:%d, criteria-sw-est-ocv missing in dt, set default value\n", rc);
+				the_chip->criteria_sw_est_ocv = DEFAULT_SW_EST_OCV_THR_MS;
+			}
+		}
+		pr_debug("[EST]last_ocv=%d, ori_cc_uah=%d, backup_cc=%d, "
+			"no_hw_ocv_ms=%ld, criteria_sw_est_ocv=%d\n",
+			the_chip->last_ocv_uv, bms_dbg.ori_cc_uah, the_chip->cc_backup_uah,
+			htc_batt_bms_timer.no_ocv_update_period_ms,
+			the_chip->criteria_sw_est_ocv);
+#else
+		pr_debug("[EST]last_ocv=%d, ori_cc_uah=%d, backup_cc=%d, "
+			"no_hw_ocv_ms=%ld\n",
+			the_chip->last_ocv_uv, bms_dbg.ori_cc_uah, the_chip->cc_backup_uah,
+			htc_batt_bms_timer.no_ocv_update_period_ms);
+#endif
 		pr_debug("[EST]last_ocv=%d, ori_cc_uah=%d, backup_cc=%d, "
 			"no_hw_ocv_ms=%ld\n",
 			the_chip->last_ocv_uv, bms_dbg.ori_cc_uah, the_chip->cc_backup_uah,
@@ -5535,6 +5567,10 @@ static int __devinit qpnp_bms_probe(struct spmi_device *spmi)
 	device_init_wakeup(&spmi->dev, 1);
 
 	load_shutdown_data(chip);
+#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+	if (chip->criteria_sw_est_ocv)
+		chip->criteria_sw_est_ocv = FIRST_SW_EST_OCV_THR_MS;
+#endif
 
 	if (chip->enable_fcc_learning) {
 			pr_info("Re-store the FCC data!\n");
