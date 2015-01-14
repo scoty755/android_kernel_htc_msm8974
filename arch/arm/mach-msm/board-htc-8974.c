@@ -479,9 +479,9 @@ static void htc_8974_add_usb_devices(void)
 	android_usb_pdata.product_id	= 0x0638;
 #elif defined(CONFIG_MACH_DUMMY)
 	android_usb_pdata.product_id	= 0x0636;
-#elif defined(CONFIG_MACH_DUMMY)
+#elif defined(CONFIG_MACH_B2_WLJ)
 	android_usb_pdata.product_id	= 0x0634;
-#elif defined(CONFIG_MACH_DUMMY)
+#elif defined(CONFIG_MACH_B2_UL)
 	android_usb_pdata.product_id	= 0x0642;
 #elif defined(CONFIG_MACH_DUMMY)
 	android_usb_pdata.product_id	= 0x0644;
@@ -603,7 +603,7 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.smooth_chg_full_delay_min = 3,
 	.decreased_batt_level_check = 1,
 	.force_shutdown_batt_vol = 3000,
-#if defined(CONFIG_MACH_DUMMY)
+#if defined(CONFIG_MACH_B2_WLJ)
 	.usb_temp_monitor_enable = 1,
 	.usb_temp_overheat_increase_threshold = 25, 
 	.normal_usb_temp_threshold = 450, 
@@ -654,7 +654,7 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.igauge.get_battery_id_mv = pm8941_get_batt_id_mv,
 	.igauge.get_battery_soc = pm8941_bms_get_batt_soc,
 	.igauge.get_battery_cc = pm8941_bms_get_batt_cc,
-#if defined(CONFIG_MACH_DUMMY)
+#if defined(CONFIG_MACH_B2_WLJ)
 	.igauge.get_usb_temperature = pm8941_get_usb_temperature,
 	.igauge.usb_overheat_otg_mode_check = pm8941_usb_overheat_otg_mode_check,
 #endif
@@ -671,7 +671,10 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 						pm8941_batt_lower_alarm_threshold_set,
 	.igauge.check_soc_for_sw_ocv = pm8941_check_soc_for_sw_ocv,
 	
-};
+#ifdef CONFIG_HTC_PNPMGR
+	.notify_pnpmgr_charging_enabled = pnpmgr_battery_charging_enabled,
+#endif};
+
 static struct platform_device htc_battery_pdev = {
 	.name = "htc_battery",
 	.id = -1,
