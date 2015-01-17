@@ -24,7 +24,7 @@
 		qcom,mdss-dsi-v-top-border = <0>;
 		qcom,mdss-dsi-v-bottom-border = <0>;
 		qcom,mdss-dsi-bpp = <24>;
-		qcom,mdss-dsi-color-order = <0>;
+		qcom,mdss-dsi-color-order = "rgb_swap_rgb";
 		qcom,mdss-dsi-underflow-color = <0xff>;
 		qcom,mdss-dsi-border-color = <0>;
 		qcom,mdss-dsi-on-command = [
@@ -55,9 +55,9 @@
 		qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
 		qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
 		qcom,mdss-dsi-h-sync-pulse = <0>;
-		qcom,mdss-dsi-traffic-mode = <1>;
+		qcom,mdss-dsi-traffic-mode = "non_burst_sync_event";
 		qcom,mdss-dsi-bllp-eof-power-mode;
-		qcom,mdss-dsi-lane-map = <0>;
+		qcom,mdss-dsi-lane-map = "lane_map_0123";
 		qcom,mdss-dsi-bllp-power-mode;
 		qcom,mdss-dsi-lane-0-state;
 		qcom,mdss-dsi-lane-1-state;
@@ -68,8 +68,8 @@
 		qcom,mdss-dsi-t-clk-pre = <0x2a>;
 		qcom,mdss-dsi-bl-min-level = <1>;
 		qcom,mdss-dsi-bl-max-level = <255>;
-		qcom,mdss-dsi-dma-trigger = <0x04>;
-		qcom,mdss-dsi-mdp-trigger = <0x0>;
+		qcom,mdss-dsi-dma-trigger = "trigger_sw";
+		qcom,mdss-dsi-mdp-trigger = "none";
 		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_i2c";
 		qcom,display-on-cmds = [39 01 00 00 00 00 02 29 00];
 		qcom,display-on-wait = <120>;
@@ -92,6 +92,7 @@
 	qcom,mdss_dsi_b2_sharp_novatek_35595_1080p_cmd {
 		compatible = "qcom,mdss-dsi-panel";
 		status = "disable";
+		qcom,cont-splash-enabled;
 		qcom,mdss-dsi-panel-name = "b2 1080p sharp/NT35595 cmd mode dsi panel";
 		qcom,mdss-dsi-panel-controller = <&mdss_dsi0>;
 
@@ -120,7 +121,7 @@
 		qcom,mdss-dsi-v-top-border = <0>;
 		qcom,mdss-dsi-v-bottom-border = <0>;
 		qcom,mdss-dsi-bpp = <24>;
-		qcom,mdss-dsi-color-order = <0>;
+		qcom,mdss-dsi-color-order = "rgb_swap_rgb";
 		qcom,mdss-dsi-underflow-color = <0xff>;
 		qcom,mdss-dsi-border-color = <0>;
 		qcom,mdss-dsi-on-command = [
@@ -244,9 +245,9 @@
 		qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
 		qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
 		qcom,mdss-dsi-h-sync-pulse = <1>;
-		qcom,mdss-dsi-traffic-mode = <1>;
+		qcom,mdss-dsi-traffic-mode = "non_burst_sync_event";
 		qcom,mdss-dsi-bllp-eof-power-mode;
-		qcom,mdss-dsi-lane-map = <0>;
+		qcom,mdss-dsi-lane-map = "lane_map_0123";
 		qcom,mdss-dsi-bllp-power-mode;
 		qcom,mdss-dsi-lane-0-state;
 		qcom,mdss-dsi-lane-1-state;
@@ -257,8 +258,8 @@
 		qcom,mdss-dsi-t-clk-pre = <0x2a>;
 		qcom,mdss-dsi-bl-min-level = <1>;
 		qcom,mdss-dsi-bl-max-level = <255>;
-		qcom,mdss-dsi-dma-trigger = <0x04>;
-		qcom,mdss-dsi-mdp-trigger = <0x0>;
+		qcom,mdss-dsi-dma-trigger = "trigger_sw";
+		qcom,mdss-dsi-mdp-trigger = "none";
 		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_i2c";
 		qcom,display-on-cmds = [39 01 00 00 00 00 02 53 24 /* Turn on BL */];
 		qcom,mdss-dsi-default-command-state = "dsi_hs_mode";
@@ -294,6 +295,7 @@
 	qcom,mdss_dsi_b2_sharp_novatek_35695_1080p_cmd {
 		compatible = "qcom,mdss-dsi-panel";
 		status = "disable";
+		qcom,cont-splash-enabled;
 		qcom,mdss-dsi-panel-name = "b2 1080p sharp/NT35695 cmd mode dsi panel";
 		qcom,mdss-dsi-panel-controller = <&mdss_dsi0>;
 
@@ -322,7 +324,7 @@
 		qcom,mdss-dsi-v-top-border = <0>;
 		qcom,mdss-dsi-v-bottom-border = <0>;
 		qcom,mdss-dsi-bpp = <24>;
-		qcom,mdss-dsi-color-order = <0>;
+		qcom,mdss-dsi-color-order = "rgb_swap_rgb";
 		qcom,mdss-dsi-underflow-color = <0xff>;
 		qcom,mdss-dsi-border-color = <0>;
 		qcom,mdss-dsi-on-command = [
@@ -595,6 +597,12 @@
 			39 01 00 00 01 00 02 FF 25 /* change to CMD2 page5 for HTC IP */
 			39 01 00 00 00 00 02 38 02 /* CE Dimming Setting */
 			39 01 00 00 00 00 02 39 0A /* CE Dimming Setting */
+			39 01 00 00 01 00 02 FF E0 /* Page switching to engineering mode */
+			39 01 00 00 00 00 02 B8 AD /* Pre-charge voltage level */
+			39 01 00 00 00 00 02 FB 01 /* Non-reload */
+			39 01 00 00 01 00 02 FF 20 /* Enter CMD2 page0 */
+			39 01 00 00 00 00 02 10 06 /* VDD boost + 200mV */
+			39 01 00 00 00 00 02 FB 01 /* Non-reload */
 			39 01 00 00 01 00 02 FF 10 /* Enter CMD1 */
 			39 01 00 00 00 00 02 44 03 /* Set Tear Line */
 			39 01 00 00 00 00 02 35 00 /* Turn on TE (TEE/ TE H/W pin) function */
@@ -605,9 +613,9 @@
 		qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
 		qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
 		qcom,mdss-dsi-h-sync-pulse = <1>;
-		qcom,mdss-dsi-traffic-mode = <1>;
+		qcom,mdss-dsi-traffic-mode = "non_burst_sync_event";
 		qcom,mdss-dsi-bllp-eof-power-mode;
-		qcom,mdss-dsi-lane-map = <0>;
+		qcom,mdss-dsi-lane-map = "lane_map_0123";
 		qcom,mdss-dsi-bllp-power-mode;
 		qcom,mdss-dsi-lane-0-state;
 		qcom,mdss-dsi-lane-1-state;
@@ -618,8 +626,8 @@
 		qcom,mdss-dsi-t-clk-pre = <0x2a>;
 		qcom,mdss-dsi-bl-min-level = <1>;
 		qcom,mdss-dsi-bl-max-level = <255>;
-		qcom,mdss-dsi-dma-trigger = <0x04>;
-		qcom,mdss-dsi-mdp-trigger = <0x0>;
+		qcom,mdss-dsi-dma-trigger = "trigger_sw";
+		qcom,mdss-dsi-mdp-trigger = "none";
 		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_i2c";
 		qcom,display-on-cmds = [39 01 00 00 00 00 02 53 24 /* Turn on BL */];
 		qcom,mdss-dsi-default-command-state = "dsi_hs_mode";
@@ -674,7 +682,7 @@
 		qcom,mdss-dsi-v-top-border = <0>;
 		qcom,mdss-dsi-v-bottom-border = <0>;
 		qcom,mdss-dsi-bpp = <24>;
-		qcom,mdss-dsi-color-order = <0>;
+		qcom,mdss-dsi-color-order = "rgb_swap_rgb";
 		qcom,mdss-dsi-underflow-color = <0xff>;
 		qcom,mdss-dsi-border-color = <0>;
 		qcom,mdss-dsi-on-command = [
@@ -815,9 +823,9 @@
 		qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
 		qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
 		qcom,mdss-dsi-h-sync-pulse = <0>;
-		qcom,mdss-dsi-traffic-mode = <1>;
+		qcom,mdss-dsi-traffic-mode = "non_burst_sync_event";
 		qcom,mdss-dsi-bllp-eof-power-mode;
-		qcom,mdss-dsi-lane-map = <0>;
+		qcom,mdss-dsi-lane-map = "lane_map_0123";
 		qcom,mdss-dsi-bllp-power-mode;
 		qcom,mdss-dsi-lane-0-state;
 		qcom,mdss-dsi-lane-1-state;
@@ -828,8 +836,8 @@
 		qcom,mdss-dsi-t-clk-pre = <0x2a>;
 		qcom,mdss-dsi-bl-min-level = <1>;
 		qcom,mdss-dsi-bl-max-level = <255>;
-		qcom,mdss-dsi-dma-trigger = <0x04>;
-		qcom,mdss-dsi-mdp-trigger = <0x0>;
+		qcom,mdss-dsi-dma-trigger = "trigger_sw";
+		qcom,mdss-dsi-mdp-trigger = "none";
 		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_i2c";
 		qcom,display-on-cmds = [39 01 00 00 00 00 02 29 00 /* LCD Display on */];
 		qcom,mdss-dsi-default-command-state = "dsi_hs_mode";
@@ -874,7 +882,7 @@
 		qcom,mdss-dsi-v-top-border = <0>;
 		qcom,mdss-dsi-v-bottom-border = <0>;
 		qcom,mdss-dsi-bpp = <24>;
-		qcom,mdss-dsi-color-order = <0>;
+		qcom,mdss-dsi-color-order = "rgb_swap_rgb";
 		qcom,mdss-dsi-underflow-color = <0xff>;
 		qcom,mdss-dsi-border-color = <0>;
 		qcom,mdss-dsi-on-command = [
@@ -1524,9 +1532,9 @@
 		qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
 		qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
 		qcom,mdss-dsi-h-sync-pulse = <0>;
-		qcom,mdss-dsi-traffic-mode = <1>;
+		qcom,mdss-dsi-traffic-mode = "non_burst_sync_event";
 		qcom,mdss-dsi-bllp-eof-power-mode;
-		qcom,mdss-dsi-lane-map = <0>;
+		qcom,mdss-dsi-lane-map = "lane_map_0123";
 		qcom,mdss-dsi-bllp-power-mode;
 		qcom,mdss-dsi-lane-0-state;
 		qcom,mdss-dsi-lane-1-state;
@@ -1537,8 +1545,8 @@
 		qcom,mdss-dsi-t-clk-pre = <0x2a>;
 		qcom,mdss-dsi-bl-min-level = <1>;
 		qcom,mdss-dsi-bl-max-level = <255>;
-		qcom,mdss-dsi-dma-trigger = <0x04>;
-		qcom,mdss-dsi-mdp-trigger = <0x0>;
+		qcom,mdss-dsi-dma-trigger = "trigger_sw";
+		qcom,mdss-dsi-mdp-trigger = "none";
 		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_i2c";
 		qcom,display-on-cmds = [39 01 00 00 00 00 02 29 00 /* LCD Display on */];
 		qcom,mdss-dsi-default-command-state = "dsi_hs_mode";
@@ -1561,6 +1569,7 @@
 	qcom,mdss_dsi_b2_lg_novatek_35595_1080p_cmd {
 		compatible = "qcom,mdss-dsi-panel";
 		status = "disable";
+		qcom,cont-splash-enabled;
 		qcom,mdss-dsi-panel-name = "b2 1080p LG/NT35595 cmd mode dsi panel";
 		qcom,mdss-dsi-panel-controller = <&mdss_dsi0>;
 
@@ -1589,7 +1598,7 @@
 		qcom,mdss-dsi-v-top-border = <0>;
 		qcom,mdss-dsi-v-bottom-border = <0>;
 		qcom,mdss-dsi-bpp = <24>;
-		qcom,mdss-dsi-color-order = <0>;
+		qcom,mdss-dsi-color-order = "rgb_swap_rgb";
 		qcom,mdss-dsi-underflow-color = <0xff>;
 		qcom,mdss-dsi-border-color = <0>;
 		qcom,mdss-dsi-on-command = [
@@ -2210,9 +2219,9 @@
 		qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
 		qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
 		qcom,mdss-dsi-h-sync-pulse = <1>;
-		qcom,mdss-dsi-traffic-mode = <1>;
+		qcom,mdss-dsi-traffic-mode = "non_burst_sync_event";
 		qcom,mdss-dsi-bllp-eof-power-mode;
-		qcom,mdss-dsi-lane-map = <0>;
+		qcom,mdss-dsi-lane-map = "lane_map_0123";
 		qcom,mdss-dsi-bllp-power-mode;
 		qcom,mdss-dsi-lane-0-state;
 		qcom,mdss-dsi-lane-1-state;
@@ -2223,8 +2232,8 @@
 		qcom,mdss-dsi-t-clk-pre = <0x2a>;
 		qcom,mdss-dsi-bl-min-level = <1>;
 		qcom,mdss-dsi-bl-max-level = <255>;
-		qcom,mdss-dsi-dma-trigger = <0x04>;
-		qcom,mdss-dsi-mdp-trigger = <0x0>;
+		qcom,mdss-dsi-dma-trigger = "trigger_sw";
+		qcom,mdss-dsi-mdp-trigger = "none";
 		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_i2c";
 		qcom,display-on-cmds = [39 01 00 00 00 00 02 53 24 /* Turn on BL */];
 		qcom,mdss-dsi-default-command-state = "dsi_hs_mode";

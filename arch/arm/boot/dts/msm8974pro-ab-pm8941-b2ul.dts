@@ -67,7 +67,7 @@
 			qcom,max-current = <12>;
 			qcom,default-state = "off";
 			qcom,id = <4>;
-			qcom,pwm_coefficient = <3>;
+			qcom,pwm_coefficient = <1>;
 		};
 
 		qcom,rgb_1 {
@@ -79,7 +79,7 @@
 			qcom,max-current = <12>;
 			qcom,default-state = "off";
 			qcom,id = <3>;
-			qcom,pwm_coefficient = <3>;
+			qcom,pwm_coefficient = <1>;
 		};
 
 		qcom,rgb_2 {
