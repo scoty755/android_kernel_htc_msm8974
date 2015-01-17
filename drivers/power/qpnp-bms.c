@@ -1790,10 +1790,6 @@ static int pm8941_bms_estimate_ocv(void)
 			the_chip->last_ocv_uv, bms_dbg.ori_cc_uah, the_chip->cc_backup_uah,
 			htc_batt_bms_timer.no_ocv_update_period_ms);
 #endif
-		pr_debug("[EST]last_ocv=%d, ori_cc_uah=%d, backup_cc=%d, "
-			"no_hw_ocv_ms=%ld\n",
-			the_chip->last_ocv_uv, bms_dbg.ori_cc_uah, the_chip->cc_backup_uah,
-			htc_batt_bms_timer.no_ocv_update_period_ms);
 	}
 	return estimated_ocv_uv;
 }
