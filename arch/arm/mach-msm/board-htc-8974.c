@@ -577,10 +577,12 @@ static void htc_8974_add_usb_devices(void)
 	android_usb_pdata.product_id	= 0x0634;
 #endif
 
+#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 	if (strcmp("0PFH20000", mid)==0)
 		android_usb_pdata.product_id	= 0x064B;
 	else if (strcmp("0P6B90000", mid)==0 || strcmp("0P6B91000", mid)==0)
 		android_usb_pdata.product_id	= 0x064A;
+#endif
 
 	platform_device_register(&android_usb_device);
 }
