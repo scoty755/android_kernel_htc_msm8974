@@ -443,6 +443,7 @@ static ssize_t htc_battery_charger_switch(struct device *dev,
 	return count;
 }
 
+#if !defined(CONFIG_MACH_B2_WLJ) || !defined(CONFIG_MACH_B2_UL)
 static ssize_t htc_battery_ftm_charger_stat(struct device *dev,
 				struct device_attribute *attr,
 				char *buf)
@@ -485,6 +486,7 @@ static ssize_t htc_battery_ftm_charger_switch(struct device *dev,
 
 	return count;
 }
+#endif
 
 static ssize_t htc_battery_set_phone_call(struct device *dev,
 				struct device_attribute *attr,
@@ -1154,6 +1156,7 @@ static void batt_charger_ctrl_alarm_handler(struct alarm *alarm)
 	queue_work(batt_charger_ctrl_wq, &batt_charger_ctrl_work);
 }
 
+#if !defined(CONFIG_MACH_B2_WLJ) || !defined(CONFIG_MACH_B2_UL)
 static unsigned int get_htc_debug_flag(void)
 {
 
@@ -1167,6 +1170,7 @@ static unsigned int get_htc_debug_flag(void)
         }
 	return cfg;
 }
+#endif
 
 void htc_battery_update_batt_uevent(void)
 {
@@ -1439,10 +1443,11 @@ int htc_battery_core_register(struct device *dev,
 	if (htc_battery->func_qb_mode_shutdown_status)
 		battery_core_info.func.func_qb_mode_shutdown_status =
 					htc_battery->func_qb_mode_shutdown_status;
+#if !defined(CONFIG_MACH_B2_WLJ) || !defined(CONFIG_MACH_B2_UL)
 	if (htc_battery->func_ftm_charger_control)
 		battery_core_info.func.func_ftm_charger_control =
 					htc_battery->func_ftm_charger_control;
-
+#endif
 	
 	for (i = 0; i < ARRAY_SIZE(htc_power_supplies); i++) {
 		rc = power_supply_register(dev, &htc_power_supplies[i]);

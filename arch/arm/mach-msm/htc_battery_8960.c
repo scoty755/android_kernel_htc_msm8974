@@ -1058,6 +1058,7 @@ static int htc_batt_charger_control(enum charger_control_flag control)
 	return ret;
 }
 
+#if !defined(CONFIG_MACH_B2_WLJ) || !defined(CONFIG_MACH_B2_UL)
 static int htc_batt_ftm_charger_control(enum ftm_charger_control_flag control)
 {
 	int ret = 0;
@@ -1075,6 +1076,7 @@ static int htc_batt_ftm_charger_control(enum ftm_charger_control_flag control)
 
 	return ret;
 }
+#endif
 
 static void htc_batt_set_full_level(int percent)
 {
@@ -1209,11 +1211,15 @@ static int htc_battery_get_rt_attr(enum htc_batt_rt_attr attr, int *val)
 		}
 		break;
 #endif
+
+#if !defined(CONFIG_MACH_B2_WLJ) || !defined(CONFIG_MACH_B2_UL)
 	case HTC_BATT_RT_ID:
 		if (htc_batt_info.igauge->get_battery_id_mv) {
 			ret = htc_batt_info.igauge->get_battery_id_mv(val);
 		}
 		break;
+#endif
+
 	default:
 		break;
 	}
@@ -2322,10 +2328,12 @@ static void batt_worker(struct work_struct *work)
 		else
 			chg_dis_reason &= ~HTC_BATT_CHG_DIS_BIT_USR_TMR;
 
+#if !defined(CONFIG_MACH_B2_WLJ) || !defined(CONFIG_MACH_B2_UL)
 		if (ftm_charger_control_flag == FTM_STOP_CHARGER)
 			chg_dis_reason |= HTC_BATT_CHG_DIS_BIT_FTM;
 		else
 			chg_dis_reason &= ~HTC_BATT_CHG_DIS_BIT_FTM;
+#endif
 
 		if (is_bounding_fully_charged_level()) {
 			chg_dis_reason |= HTC_BATT_CHG_DIS_BIT_MFG;
@@ -2396,6 +2404,7 @@ static void batt_worker(struct work_struct *work)
 				first ||
 				pwrsrc_enabled != prev_pwrsrc_enabled) {
 
+#if !defined(CONFIG_MACH_B2_WLJ) || !defined(CONFIG_MACH_B2_UL)
 			if (htc_batt_info.icharger && htc_batt_info.icharger->set_ftm_charge_enable_type) {
 				if (prev_ftm_charger_control_flag != ftm_charger_control_flag) {
 					if (ftm_charger_control_flag == FTM_FAST_CHARGE)
@@ -2406,7 +2415,7 @@ static void batt_worker(struct work_struct *work)
 						htc_batt_info.icharger->set_ftm_charge_enable_type(HTC_FTM_PWR_SOURCE_TYPE_NONE);
 				}
 			}
-
+#endif
 			
 			if (prev_chg_src != htc_batt_info.rep.charging_source ||
 					prev_ftm_charger_control_flag != ftm_charger_control_flag ||
