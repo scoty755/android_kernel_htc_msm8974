@@ -550,7 +550,9 @@ static struct platform_device android_usb_device = {
 
 static void htc_8974_add_usb_devices(void)
 {
+#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 	char *mid = board_mid();
+#endif
 	android_usb_pdata.serial_number = board_serialno();
 
 	if (board_mfg_mode() == 0) {
