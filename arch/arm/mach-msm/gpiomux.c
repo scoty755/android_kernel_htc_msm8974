@@ -123,7 +123,7 @@ int msm_gpiomux_put(unsigned gpio)
 }
 EXPORT_SYMBOL(msm_gpiomux_put);
 
-#if !defined(CONFIG_MACH_B2_WLJ) || !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 int msm_tlmm_misc_reg_read(enum msm_tlmm_misc_reg misc_reg)
 {
 	return readl_relaxed(MSM_TLMM_BASE + misc_reg);
