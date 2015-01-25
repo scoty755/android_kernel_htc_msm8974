@@ -455,6 +455,9 @@ obj-$(CONFIG_MACH_M8) += board-m8-gpiomux.o board-m8-audio.o
 obj-$(CONFIG_MACH_M8_WHL) += board-m8-gpiomux.o board-m8-audio.o
 obj-$(CONFIG_MACH_M8_WL) += board-m8-gpiomux.o board-m8-audio.o
 
+obj-$(CONFIG_MACH_B2_WLJ) += board-b2-gpiomux.o board-m8-audio.o
+obj-$(CONFIG_MACH_B2_UL) += board-b2-gpiomux.o board-m8-audio.o
+
 obj-$(CONFIG_HTC_HEADSET_PMIC) += htc_headset_pmic.o
 obj-$(CONFIG_HTC_HEADSET_GPIO) += htc_headset_gpio.o
 obj-$(CONFIG_HTC_HEADSET_ONE_WIRE) += htc_headset_one_wire.o
