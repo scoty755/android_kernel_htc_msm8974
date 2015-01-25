@@ -25,6 +25,7 @@ EXPORT_SYMBOL_GPL(power_supply_class);
 
 static struct device_type power_supply_dev_type;
 
+#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 /**
  * power_supply_set_voltage_limit - set current limit
  * @psy:	the power supply to control
@@ -45,6 +46,7 @@ int power_supply_set_voltage_limit(struct power_supply *psy, int limit)
 	return -ENXIO;
 }
 EXPORT_SYMBOL(power_supply_set_voltage_limit);
+#endif
 
 
 /**
