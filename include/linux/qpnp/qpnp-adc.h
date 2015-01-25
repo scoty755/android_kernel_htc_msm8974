@@ -20,9 +20,7 @@
 
 #include <linux/kernel.h>
 #include <linux/list.h>
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 #include <linux/qpnp-revid.h>
-#endif
 /**
  * enum qpnp_vadc_channels - QPNP AMUX arbiter channels
  */
@@ -205,9 +203,7 @@ enum qpnp_adc_channel_scaling_param {
 	PATH_SCALING2,
 	PATH_SCALING3,
 	PATH_SCALING4,
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 	PATH_SCALING5,
-#endif
 	PATH_SCALING_NONE,
 };
 
@@ -880,7 +876,6 @@ struct qpnp_vadc_result {
  *		 each individual channel whether it is voltage, current,
  *		 temperature, etc and compensates the channel properties.
  */
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
 struct qpnp_adc_amux {
 	char					*name;
 	enum qpnp_vadc_channels			channel_num;
@@ -889,31 +884,7 @@ struct qpnp_adc_amux {
 	enum qpnp_adc_scale_fn_type		adc_scale_fn;
 	enum qpnp_adc_fast_avg_ctl		fast_avg_setup;
 	enum qpnp_adc_hw_settle_time		hw_settle_time;
-};
-
-/**
- * struct qpnp_vadc_scaling_ratio
- *
- */
-static const struct qpnp_vadc_scaling_ratio qpnp_vadc_amux_scaling_ratio[] = {
-	{1, 1},
-	{1, 3},
-	{1, 4},
-	{1, 6},
-	{1, 20}
-};
-#else
-struct qpnp_adc_amux {
-	char					*name;
-	enum qpnp_vadc_channels			channel_num;
-	enum qpnp_adc_channel_scaling_param	chan_path_prescaling;
-	enum qpnp_adc_decimation_type		adc_decimation;
-	enum qpnp_adc_scale_fn_type		adc_scale_fn;
-	enum qpnp_adc_fast_avg_ctl		fast_avg_setup;
-	enum qpnp_adc_hw_settle_time		hw_settle_time;
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 	enum qpnp_adc_calib_type		calib_type;
-#endif
 };
 
 /**
@@ -928,7 +899,6 @@ static const struct qpnp_vadc_scaling_ratio qpnp_vadc_amux_scaling_ratio[] = {
 	{1, 20},
 	{1, 8}
 };
-#endif
 
 /**
  * struct qpnp_vadc_scale_fn - Scaling function prototype
@@ -1045,7 +1015,6 @@ struct qpnp_adc_amux_properties {
 };
 
 /* SW index's for PMIC type and version used by QPNP VADC and IADC */
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 #define QPNP_REV_ID_8941_3_1	1
 #define QPNP_REV_ID_8026_1_0	2
 #define QPNP_REV_ID_8026_2_0	3
@@ -1055,7 +1024,6 @@ struct qpnp_adc_amux_properties {
 #define QPNP_REV_ID_8026_2_2	7
 #define QPNP_REV_ID_8941_3_0	8
 #define QPNP_REV_ID_8941_2_0	9
-#endif
 
 
 /* Public API */
@@ -1422,9 +1390,7 @@ int32_t qpnp_vbat_sns_comp_result(struct qpnp_vadc_chip *dev,
  * @dev:	Structure device node.
  * returns internal mapped PMIC number and revision id.
  */
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 int qpnp_adc_get_revid_version(struct device *dev);
-#endif
 #else
 static inline int32_t qpnp_vadc_read(struct qpnp_vadc_chip *dev,
 				uint32_t channel,
@@ -1538,10 +1504,8 @@ static inline int32_t qpnp_vadc_iadc_sync_complete_request(
 static inline int32_t qpnp_vbat_sns_comp_result(struct qpnp_vadc_chip *dev,
 						int64_t *result)
 { return -ENXIO; }
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 static inline int qpnp_adc_get_revid_version(struct device *dev)
 { return -ENXIO; }
-#endif
 #endif
 
 /* Public API */

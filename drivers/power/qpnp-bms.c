@@ -36,10 +36,10 @@
 #include "mach/htc_battery_cell.h"
 #endif
 
-#ifdef pr_info
-#undef pr_info
+#ifdef pr_debug
+#undef pr_debug
 #endif
-#define pr_info(fmt, args...) do { \
+#define pr_debug(fmt, args...) do { \
 		if (flag_enable_bms_charger_log) \
 			printk(KERN_INFO pr_fmt(fmt), ## args); \
 	} while (0)
@@ -364,7 +364,6 @@ static struct of_device_id qpnp_bms_match_table[] = {
 	{}
 };
 
-#if defined(CONFIG_MACH_B2_WLJ) && !(defined(CONFIG_HTC_BATT_8960)) || defined(CONFIG_MACH_B2_UL) && !(defined(CONFIG_HTC_BATT_8960))
 static char *qpnp_bms_supplicants[] = {
 	"battery"
 };
@@ -380,7 +379,6 @@ static enum power_supply_property msm_bms_power_props[] = {
 	POWER_SUPPLY_PROP_CHARGE_FULL,
 	POWER_SUPPLY_PROP_CYCLE_COUNT,
 };
-#endif 
 
 struct htc_bms_timer {
 	unsigned long batt_system_jiffies;
@@ -393,10 +391,8 @@ static int ocv_update_stop_active_mask = OCV_UPDATE_STOP_BIT_CABLE_IN |
 											OCV_UPDATE_STOP_BIT_ATTR_FILE |
 											OCV_UPDATE_STOP_BIT_BOOT_UP;
 static int ocv_update_stop_reason;
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 static int sw_ocv_estimated_stop_active_mask = OCV_UPDATE_STOP_BIT_CABLE_OUT;
 static int sw_ocv_estimated_stop_reason;
-#endif
 static int is_ocv_update_start = 0;
 static int is_do_sw_ocv_in_eoc = 0;
 struct mutex ocv_update_lock;
@@ -421,11 +417,6 @@ static bool flag_enable_bms_charger_log;
 #define BATT_LOG_BUF_LEN (512)
 static char batt_log_buf[BATT_LOG_BUF_LEN];
 static unsigned long allow_ocv_time = 0;
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-static int new_boot_soc = 0;
-static int consistent_flag = false;;
-static int store_soc_ui = -1;
-#else
 static unsigned long allow_sw_ocv_est_time = 0;
 static int new_boot_soc = 0;
 static int consistent_flag = false;;
@@ -448,7 +439,6 @@ static int chgcyl_checking_table[6][2] = {
 				{100,93},
 				{0,95}
 				};
-#endif
 
 static int qpnp_read_wrapper(struct qpnp_bms_chip *chip, u8 *val,
 			u16 base, int count)
@@ -618,24 +608,6 @@ static int convert_vbatt_uv_to_raw(struct qpnp_bms_chip *chip,
 						+ VADC_INTRINSIC_OFFSET;
 }
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-static inline int convert_vbatt_raw_to_uv(struct qpnp_bms_chip *chip,
-					uint16_t reading)
-{
-	int64_t uv;
-	int rc;
-
-	uv = vadc_reading_to_uv(reading);
-	pr_debug("%u raw converted into %lld uv\n", reading, uv);
-	uv = adjust_vbatt_reading(chip, uv);
-	pr_debug("adjusted into %lld uv\n", uv);
-	rc = qpnp_vbat_sns_comp_result(chip->vadc_dev, &uv);
-	if (rc)
-		pr_debug("could not compensate vbatt\n");
-	pr_debug("compensated into %lld uv\n", uv);
-	return uv;
-}
-#else
 static inline int convert_vbatt_raw_to_uv(struct qpnp_bms_chip *chip,
 					uint16_t reading, bool is_pon_ocv)
 {
@@ -652,7 +624,6 @@ static inline int convert_vbatt_raw_to_uv(struct qpnp_bms_chip *chip,
 	pr_debug("compensated into %lld uv\n", uv);
 	return uv;
 }
-#endif
 
 #define CC_READING_RESOLUTION_N	542535
 #define CC_READING_RESOLUTION_D	100000
@@ -842,28 +813,6 @@ static int calib_vadc(struct qpnp_bms_chip *chip)
 	return 0;
 }
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-static void convert_and_store_ocv(struct qpnp_bms_chip *chip,
-				struct raw_soc_params *raw,
-				int batt_temp)
-{
-	int rc;
-
-	pr_debug("prev_last_good_ocv_raw = %d, last_good_ocv_raw = %d\n",
-			chip->prev_last_good_ocv_raw,
-			raw->last_good_ocv_raw);
-	rc = calib_vadc(chip);
-	if (rc)
-		pr_err("Vadc reference voltage read failed, rc = %d\n", rc);
-	chip->prev_last_good_ocv_raw = raw->last_good_ocv_raw;
-	raw->last_good_ocv_uv = convert_vbatt_raw_to_uv(chip,
-					raw->last_good_ocv_raw);
-	chip->last_ocv_uv = raw->last_good_ocv_uv;
-	chip->last_ocv_temp = batt_temp;
-	chip->software_cc_uah = 0;
-	pr_debug("last_good_ocv_uv = %d\n", raw->last_good_ocv_uv);
-}
-#else
 static void convert_and_store_ocv(struct qpnp_bms_chip *chip,
 				struct raw_soc_params *raw,
 				int batt_temp, bool is_pon_ocv)
@@ -884,7 +833,6 @@ static void convert_and_store_ocv(struct qpnp_bms_chip *chip,
 	chip->software_cc_uah = 0;
 	pr_debug("last_good_ocv_uv = %d\n", raw->last_good_ocv_uv);
 }
-#endif
 
 #define CLEAR_CC			BIT(7)
 #define CLEAR_SHDW_CC			BIT(6)
@@ -1153,11 +1101,7 @@ static int read_soc_params_raw(struct qpnp_bms_chip *chip,
 	mutex_unlock(&chip->bms_output_lock);
 
 	if (chip->prev_last_good_ocv_raw == OCV_RAW_UNINITIALIZED) {
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-		convert_and_store_ocv(chip, raw, batt_temp);
-#else
 		convert_and_store_ocv(chip, raw, batt_temp, true);
-#endif
 		warm_reset = qpnp_pon_is_warm_reset();
 		pr_debug("PON_OCV_UV=%d, cc=%llx, warm_reset=%d, ocv_backup=%d, "
 				"cc_backup=%d\n",
@@ -1224,11 +1168,7 @@ static int read_soc_params_raw(struct qpnp_bms_chip *chip,
 		pr_debug("EOC Battery full ocv_reading = 0x%x\n",
 				chip->ocv_reading_at_100);
 	} else if (chip->prev_last_good_ocv_raw != raw->last_good_ocv_raw) {
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-		convert_and_store_ocv(chip, raw, batt_temp);
-#else
 		convert_and_store_ocv(chip, raw, batt_temp, false);
-#endif
 		
 		htc_batt_bms_timer.no_ocv_update_period_ms = 0;
 #if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
@@ -1257,13 +1197,11 @@ static int read_soc_params_raw(struct qpnp_bms_chip *chip,
 #endif
 		
 		chip->batt_full_fake_ocv = false;
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 		store_start_soc = 0;
 		store_start_cc = 0;
 		store_start_pc = 0;
 		store_start_real_soc = 0;
 		pr_info("Reset the Store CC, since SW OCV update.\n");
-#endif
 	} else if (chip->batt_full_fake_ocv) {
 		chip->batt_full_fake_ocv = false;
 		
@@ -1306,11 +1244,7 @@ static int calculate_pc(struct qpnp_bms_chip *chip, int ocv_uv,
 	int pc;
 
 	pc = interpolate_pc(chip->pc_temp_ocv_lut,
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-			batt_temp / 10, ocv_uv / 1000);
-#else
 			batt_temp, ocv_uv / 1000);
-#endif
 	pr_debug("pc = %u %% for ocv = %d uv batt_temp = %d\n",pc, ocv_uv, batt_temp);
 	
 	return pc;
@@ -1390,18 +1324,10 @@ static int calculate_cc(struct qpnp_bms_chip *chip, int64_t cc,
 		reset_cc(chip, cc_type == SHDW_CC ? CLEAR_SHDW_CC : CLEAR_CC);
 		return (int)*software_counter;
 	} else {
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-		pr_debug("software_%scc = %lld, cc_uah = %lld, total = %lld\n",
-				cc_type == SHDW_CC ? "shdw_" : "",
-				*software_counter, cc_uah,
-				*software_counter + cc_uah);
-#else
 		pr_debug("software_%scc = %lld, cc_uah = %lld(%lld), total = %lld\n",
 				cc_type == SHDW_CC ? "shdw_" : "",
 				*software_counter, cc_uah,pre_cc_uah,
 				*software_counter + cc_uah);
-#endif
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 		if(gbFCC_Start){
 			if(cc_type != SHDW_CC){
 				if(pre_cc_uah == 0){
@@ -1412,7 +1338,6 @@ static int calculate_cc(struct qpnp_bms_chip *chip, int64_t cc,
 				}
 			}
 		}
-#endif
 		return *software_counter + cc_uah;
 	}
 }
@@ -1427,17 +1352,12 @@ static int get_rbatt(struct qpnp_bms_chip *chip,
 		pr_debug("RBATT = %d\n", rbatt_mohm);
 		return rbatt_mohm;
 	}
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-	batt_temp = batt_temp / 10;
-#endif
 	
-#ifdef CONFIG_ARCH_DUMMY
-		
+	
 	if (soc_rbatt_mohm > 100)
 		scalefactor = interpolate_scalingfactor(chip->rbatt_sf_lut,
 							batt_temp, 100);
 	else
-#endif
 	scalefactor = interpolate_scalingfactor(chip->rbatt_sf_lut,
 						batt_temp, soc_rbatt_mohm);
 	bms_dbg.rbatt_sf = scalefactor;
@@ -1467,11 +1387,8 @@ static void calculate_iavg(struct qpnp_bms_chip *chip, int cc_uah,
 	*iavg_ua = div_s64((s64)delta_cc_uah * 3600, delta_time_s);
 
 out:
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-	pr_debug("delta_cc = %d iavg_ua = %d\n", delta_cc_uah, (int)*iavg_ua);
-#else
 	pr_debug("delta_cc = %d iavg_ua = %d, cc_uah = %d, last_cc_uah=%d\n", delta_cc_uah, (int)*iavg_ua, cc_uah, chip->last_cc_uah);
-#endif
+
 	
 	chip->last_cc_uah = cc_uah;
 }
@@ -1485,31 +1402,12 @@ static int calculate_termination_uuc(struct qpnp_bms_chip *chip,
 	int unusable_uv, pc_unusable, uuc_uah;
 	int i = 0;
 	int ocv_mv;
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-	int batt_temp_degc = batt_temp / 10;
-#endif
 	int rbatt_mohm;
 	int delta_uv;
 	int prev_delta_uv = 0;
 	int prev_rbatt_mohm = 0;
 	int uuc_rbatt_mohm;
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-	for (i = 0; i <= 100; i++) {
-		ocv_mv = interpolate_ocv(chip->pc_temp_ocv_lut,
-				batt_temp_degc, i);
-		rbatt_mohm = get_rbatt(chip, i, batt_temp);
-		unusable_uv = (rbatt_mohm * uuc_iavg_ma)
-							+ (chip->v_cutoff_uv);
-		delta_uv = ocv_mv * 1000 - unusable_uv;
-
-		if (delta_uv > 0)
-			break;
-
-		prev_delta_uv = delta_uv;
-		prev_rbatt_mohm = rbatt_mohm;
-	}
-#else
 	for (i = 0; i <= 100; i++) {
 		ocv_mv = interpolate_ocv(chip->pc_temp_ocv_lut,
 				batt_temp, i);
@@ -1524,7 +1422,6 @@ static int calculate_termination_uuc(struct qpnp_bms_chip *chip,
 		prev_delta_uv = delta_uv;
 		prev_rbatt_mohm = rbatt_mohm;
 	}
-#endif
 
 	uuc_rbatt_mohm = linear_interpolate(rbatt_mohm, delta_uv,
 					prev_rbatt_mohm, prev_delta_uv,
@@ -1552,9 +1449,6 @@ static int adjust_uuc(struct qpnp_bms_chip *chip,
 			int batt_temp)
 {
 	int new_unusable_mv, new_iavg_ma;
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-	int batt_temp_degc = batt_temp / 10;
-#endif
 	int max_percent_change;
 
 	max_percent_change = max(params->delta_time_s
@@ -1699,46 +1593,6 @@ static int find_pc_for_soc(struct qpnp_bms_chip *chip,
 
 #define SIGN(x) ((x) < 0 ? -1 : 1)
 #define UV_PER_SPIN 50000
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-static int find_ocv_for_pc(struct qpnp_bms_chip *chip, int batt_temp, int pc)
-{
-	int new_pc;
-	int batt_temp_degc = batt_temp / 10;
-	int ocv_mv;
-	int delta_mv = 5;
-	int max_spin_count;
-	int count = 0;
-	int sign, new_sign;
-
-	ocv_mv = interpolate_ocv(chip->pc_temp_ocv_lut, batt_temp_degc, pc);
-
-	new_pc = interpolate_pc(chip->pc_temp_ocv_lut, batt_temp_degc, ocv_mv);
-	pr_debug("test revlookup pc = %d for ocv = %d\n", new_pc, ocv_mv);
-	max_spin_count = 1 + (chip->max_voltage_uv - chip->v_cutoff_uv)
-						/ UV_PER_SPIN;
-	sign = SIGN(pc - new_pc);
-
-	while (abs(new_pc - pc) != 0 && count < max_spin_count) {
-		new_sign = SIGN(pc - new_pc);
-		if (new_sign != sign) {
-			if (delta_mv > 1)
-				delta_mv = 1;
-			else
-				break;
-		}
-		sign = new_sign;
-
-		ocv_mv = ocv_mv + delta_mv * sign;
-		new_pc = interpolate_pc(chip->pc_temp_ocv_lut,
-				batt_temp_degc, ocv_mv);
-		pr_debug("test revlookup pc = %d for ocv = %d\n",
-			new_pc, ocv_mv);
-		count++;
-	}
-
-	return ocv_mv * 1000;
-}
-#else
 static int find_ocv_for_pc(struct qpnp_bms_chip *chip, int batt_temp, int pc)
 {
 	int new_pc;
@@ -1776,7 +1630,6 @@ static int find_ocv_for_pc(struct qpnp_bms_chip *chip, int batt_temp, int pc)
 
 	return ocv_mv * 1000;
 }
-#endif
 
 static int get_rbatt_for_estimate_ocv(struct sf_lut *rbatt_lut, int temp)
 {
@@ -1971,12 +1824,10 @@ close_time:
 	return rc;
 }
 
-#if defined(CONFIG_MACH_B2_WLJ) && !(defined(CONFIG_HTC_BATT_8960)) || defined(CONFIG_MACH_B2_UL) && !(defined(CONFIG_HTC_BATT_8960))
 static int get_prop_bms_batt_resistance(struct qpnp_bms_chip *chip)
 {
 	return chip->rbatt_mohm * 1000;
 }
-#endif
 
 static int get_prop_bms_current_now(struct qpnp_bms_chip *chip)
 {
@@ -1990,33 +1841,6 @@ static int get_prop_bms_current_now(struct qpnp_bms_chip *chip)
 	return result_ua;
 }
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-static int get_prop_bms_charge_counter(struct qpnp_bms_chip *chip)
-{
-	int64_t cc_raw;
-
-	mutex_lock(&chip->bms_output_lock);
-	lock_output_data(chip);
-	read_cc_raw(chip, &cc_raw, false);
-	unlock_output_data(chip);
-	mutex_unlock(&chip->bms_output_lock);
-
-	return calculate_cc(chip, cc_raw, CC, NORESET);
-}
-
-static int get_prop_bms_charge_counter_shadow(struct qpnp_bms_chip *chip)
-{
-	int64_t cc_raw;
-
-	mutex_lock(&chip->bms_output_lock);
-	lock_output_data(chip);
-	read_cc_raw(chip, &cc_raw, true);
-	unlock_output_data(chip);
-	mutex_unlock(&chip->bms_output_lock);
-
-	return calculate_cc(chip, cc_raw, SHDW_CC, NORESET);
-}
-#else
 static int get_prop_bms_charge_counter(struct qpnp_bms_chip *chip)
 {
 	int64_t cc_raw = 0;
@@ -2042,14 +1866,11 @@ static int get_prop_bms_charge_counter_shadow(struct qpnp_bms_chip *chip)
 
 	return calculate_cc(chip, cc_raw, SHDW_CC, NORESET);
 }
-#endif
 
-#if defined(CONFIG_MACH_B2_WLJ) && !(defined(CONFIG_HTC_BATT_8960)) || defined(CONFIG_MACH_B2_UL) && !(defined(CONFIG_HTC_BATT_8960))
 static int get_prop_bms_charge_full_design(struct qpnp_bms_chip *chip)
 {
 	return chip->fcc_mah * 1000;
 }
-#endif
 
 static int get_prop_bms_charge_full(struct qpnp_bms_chip *chip)
 {
@@ -2659,11 +2480,7 @@ out:
 #endif 
 static int clamp_soc_based_on_voltage(struct qpnp_bms_chip *chip, int soc)
 {
-#if defined(CONFIG_MACH_B2_WLJ) && !(defined(CONFIG_HTC_BATT_8960)) || defined(CONFIG_MACH_B2_UL) && !(defined(CONFIG_HTC_BATT_8960))
-	int rc, vbat_uv, batt_temp;
-#else
 	int rc, vbat_uv = 0, batt_temp;
-#endif
 
 	rc = get_battery_voltage(chip, &vbat_uv);
 	if (rc < 0) {
@@ -2936,7 +2753,6 @@ done_calculating:
 			chip->cc_backup_uah, chip->ocv_backup_uv, consistent_flag, is_ocv_update_start,
 			htc_batt_bms_timer.no_ocv_update_period_ms);
 
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 	if(Last_OCV_Raw == 0){
 		Last_OCV_Raw = raw->last_good_ocv_raw;
 	}
@@ -2952,7 +2768,6 @@ done_calculating:
 			pr_info("Reset the Store CC.\n");
 		}
 	}
-#endif
 	get_current_time(&chip->last_recalc_time);
 	chip->first_time_calc_soc = 0;
 	chip->first_time_calc_uuc = 0;
@@ -2962,11 +2777,7 @@ done_calculating:
 static int calculate_soc_from_voltage(struct qpnp_bms_chip *chip)
 {
 	int voltage_range_uv, voltage_remaining_uv, voltage_based_soc;
-#if defined(CONFIG_MACH_B2_WLJ) && !(defined(CONFIG_HTC_BATT_8960)) || defined(CONFIG_MACH_B2_UL) && !(defined(CONFIG_HTC_BATT_8960))
-	int rc, vbat_uv;
-#else
 	int rc, vbat_uv = 0;
-#endif
 
 	rc = get_battery_voltage(chip, &vbat_uv);
 	if (rc < 0) {
@@ -3334,19 +3145,12 @@ static void readjust_fcc_table(struct qpnp_bms_chip *chip)
 
 	temp->cols = chip->fcc_temp_lut->cols;
 	for (i = 0; i < chip->fcc_temp_lut->cols; i++) {
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-		temp->x[i] = chip->fcc_temp_lut->x[i];
-		ratio = div_u64(chip->fcc_temp_lut->y[i] * 1000, fcc);
-		temp->y[i] =  (ratio * chip->fcc_new_mah);
-		temp->y[i] /= 1000;
-#else
 		pr_info("old temp_lut: [%d], x=%d, y=%d\n",i, chip->fcc_temp_lut->x[i], chip->fcc_temp_lut->y[i]);
 		temp->x[i] = chip->fcc_temp_lut->x[i];
 		ratio = div_u64(chip->fcc_temp_lut->y[i] * 1000, fcc);
 		temp->y[i] =  (ratio * chip->fcc_new_mah);
 		temp->y[i] /= 1000;
 		pr_info("new temp_lut: [%d], x=%d, y=%d\n",i, temp->x[i], temp->y[i]);
-#endif
 	}
 
 	old = chip->adjusted_fcc_temp_lut;
@@ -3369,17 +3173,6 @@ static int read_fcc_data_from_backup(struct qpnp_bms_chip *chip)
 			return rc;
 		}
 		if (fcc == 0 || (fcc == 0xFF && chgcyl == 0xFF)) {
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-			chip->fcc_learning_samples[i].fcc_new = 0;
-			chip->fcc_learning_samples[i].chargecycles = 0;
-		} else {
-			
-			chip->fcc_sample_count++;
-			chip->fcc_learning_samples[i].fcc_new =
-						fcc * chip->fcc_resolution;
-			chip->fcc_learning_samples[i].chargecycles =
-						chgcyl * CHGCYL_RESOLUTION;
-#else
 			pr_info("No fcc data sample!!!\n");
 			
 			chip->fcc_learning_samples[i].fcc_new = 0;
@@ -3392,7 +3185,6 @@ static int read_fcc_data_from_backup(struct qpnp_bms_chip *chip)
 			chip->fcc_learning_samples[i].chargecycles =
 						chgcyl * CHGCYL_RESOLUTION;
 			pr_info("backup data: sample[%d], fcc_new=%d, chargecycles=%d\n",i, chip->fcc_learning_samples[i].fcc_new, chip->fcc_learning_samples[i].chargecycles);
-#endif
 		}
 	}
 
@@ -3420,35 +3212,6 @@ static int discard_backup_fcc_data(struct qpnp_bms_chip *chip)
 }
 
 static void
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-average_fcc_samples_and_readjust_fcc_table(struct qpnp_bms_chip *chip)
-{
-	int i, temp_fcc_avg = 0, temp_fcc_delta = 0, new_fcc_avg = 0;
-	struct fcc_sample *ft;
-
-	for (i = 0; i < chip->min_fcc_learning_samples; i++)
-		temp_fcc_avg += chip->fcc_learning_samples[i].fcc_new;
-
-	temp_fcc_avg /= chip->min_fcc_learning_samples;
-	temp_fcc_delta = div_u64(temp_fcc_avg * DELTA_FCC_PERCENT, 100);
-
-	
-	for (i = 0; i < chip->min_fcc_learning_samples; i++) {
-		ft = &chip->fcc_learning_samples[i];
-		if (abs(ft->fcc_new - temp_fcc_avg) > temp_fcc_delta)
-			new_fcc_avg += temp_fcc_avg;
-		else
-			new_fcc_avg += ft->fcc_new;
-	}
-	new_fcc_avg /= chip->min_fcc_learning_samples;
-
-	chip->fcc_new_mah = new_fcc_avg;
-	chip->fcc_new_batt_temp = FCC_DEFAULT_TEMP;
-	pr_info("FCC update: New fcc_mah=%d, fcc_batt_temp=%d\n",
-				new_fcc_avg, FCC_DEFAULT_TEMP);
-	readjust_fcc_table(chip);
-}
-#else
 average_fcc_samples_and_readjust_fcc_table(struct qpnp_bms_chip *chip)
 {
 	int i, temp_fcc_avg = 0, temp_fcc_delta = 0, new_fcc_avg = 0, chgcyle_check_fcc = 0, index;
@@ -3509,7 +3272,6 @@ average_fcc_samples_and_readjust_fcc_table(struct qpnp_bms_chip *chip)
 				new_fcc_avg, FCC_DEFAULT_TEMP, chip->min_fcc_learning_samples);
 	readjust_fcc_table(chip);
 }
-#endif
 
 static void backup_charge_cycle(struct qpnp_bms_chip *chip)
 {
@@ -3530,29 +3292,6 @@ static void backup_charge_cycle(struct qpnp_bms_chip *chip)
 	}
 }
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-static bool chargecycles_in_range(struct qpnp_bms_chip *chip)
-{
-	int i, min_cycle, max_cycle, valid_range;
-
-	
-	max_cycle = min_cycle = chip->fcc_learning_samples[0].chargecycles;
-	for (i = 1; i < chip->min_fcc_learning_samples; i++) {
-		if (min_cycle > chip->fcc_learning_samples[i].chargecycles)
-			min_cycle = chip->fcc_learning_samples[i].chargecycles;
-		if (max_cycle < chip->fcc_learning_samples[i].chargecycles)
-			max_cycle = chip->fcc_learning_samples[i].chargecycles;
-	}
-
-	
-	valid_range = DIV_ROUND_UP(VALID_FCC_CHGCYL_RANGE,
-					CHGCYL_RESOLUTION) * CHGCYL_RESOLUTION;
-	if (abs(max_cycle - min_cycle) > valid_range)
-		return false;
-
-	return true;
-}
-#else
 static bool chargecycles_in_range(struct qpnp_bms_chip *chip)
 {
 	int i, min_cycle, max_cycle, valid_range;
@@ -3577,7 +3316,6 @@ static bool chargecycles_in_range(struct qpnp_bms_chip *chip)
 	pr_info("Valid range: %d\n",valid_range);
 	return true;
 }
-#endif
 
 static int read_chgcycle_data_from_backup(struct qpnp_bms_chip *chip)
 {
@@ -3599,17 +3337,6 @@ static int read_chgcycle_data_from_backup(struct qpnp_bms_chip *chip)
 }
 
 static void
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-attempt_learning_new_fcc(struct qpnp_bms_chip *chip)
-{
-	pr_info("Total FCC sample count=%d\n", chip->fcc_sample_count);
-
-	
-	if ((chip->fcc_sample_count == chip->min_fcc_learning_samples) &&
-						chargecycles_in_range(chip))
-		average_fcc_samples_and_readjust_fcc_table(chip);
-}
-#else
 attempt_learning_new_fcc(struct qpnp_bms_chip *chip)
 {
 	pr_info("Total FCC sample count=%d\n", chip->fcc_sample_count);
@@ -3622,7 +3349,6 @@ attempt_learning_new_fcc(struct qpnp_bms_chip *chip)
 		average_fcc_samples_and_readjust_fcc_table(chip);
 	}
 }
-#endif
 
 static int calculate_real_soc(struct qpnp_bms_chip *chip,
 		int batt_temp, struct raw_soc_params *raw, int cc_uah)
@@ -3637,137 +3363,6 @@ static int calculate_real_soc(struct qpnp_bms_chip *chip,
 
 #define MAX_U8_VALUE		((u8)(~0U))
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-static int backup_new_fcc(struct qpnp_bms_chip *chip, int fcc_mah,
-							int chargecycles)
-{
-	int rc, min_cycle, i;
-	u8 fcc_new, chgcyl, pos = 0;
-	struct fcc_sample *ft;
-
-	if ((fcc_mah > (chip->fcc_resolution * MAX_U8_VALUE)) ||
-		(chargecycles > (CHGCYL_RESOLUTION * MAX_U8_VALUE))) {
-		pr_warn("FCC/Chgcyl beyond storage limit. FCC=%d, chgcyl=%d\n",
-							fcc_mah, chargecycles);
-		return -EINVAL;
-	}
-
-	if (chip->fcc_sample_count == chip->min_fcc_learning_samples) {
-		
-		min_cycle = chip->fcc_learning_samples[0].chargecycles;
-		for (i = 1; i < chip->min_fcc_learning_samples; i++) {
-			if (min_cycle >
-				chip->fcc_learning_samples[i].chargecycles)
-				pos = i;
-		}
-	} else {
-		
-		for (i = 0; i < chip->min_fcc_learning_samples; i++) {
-			ft = &chip->fcc_learning_samples[i];
-			if (ft->fcc_new == 0 || (ft->fcc_new == 0xFF &&
-						ft->chargecycles == 0xFF)) {
-				pos = i;
-				break;
-			}
-		}
-		chip->fcc_sample_count++;
-	}
-	chip->fcc_learning_samples[pos].fcc_new = fcc_mah;
-	chip->fcc_learning_samples[pos].chargecycles = chargecycles;
-
-	fcc_new = DIV_ROUND_UP(fcc_mah, chip->fcc_resolution);
-	rc = qpnp_write_wrapper(chip, (u8 *)&fcc_new,
-			chip->base + BMS_FCC_BASE_REG + pos, 1);
-	if (rc)
-		return rc;
-
-	chgcyl = DIV_ROUND_UP(chargecycles, CHGCYL_RESOLUTION);
-	rc = qpnp_write_wrapper(chip, (u8 *)&chgcyl,
-			chip->base + BMS_CHGCYL_BASE_REG + pos, 1);
-	if (rc)
-		return rc;
-
-	pr_info("Backup new FCC: fcc_new=%d, chargecycle=%d, pos=%d\n",
-						fcc_new, chgcyl, pos);
-
-	return rc;
-}
-
-static void update_fcc_learning_table(struct qpnp_bms_chip *chip,
-			int new_fcc_uah, int chargecycles, int batt_temp)
-{
-	int rc, fcc_default, fcc_temp;
-
-	
-	fcc_default = calculate_fcc(chip, FCC_DEFAULT_TEMP) / 1000;
-	fcc_temp = calculate_fcc(chip, batt_temp) / 1000;
-	new_fcc_uah = (new_fcc_uah / fcc_temp) * fcc_default;
-
-	rc = backup_new_fcc(chip, new_fcc_uah / 1000, chargecycles);
-	if (rc) {
-		pr_err("Unable to backup new FCC\n");
-		return;
-	}
-	
-	attempt_learning_new_fcc(chip);
-}
-
-static bool is_new_fcc_valid(int new_fcc_uah, int fcc_uah)
-{
-	if ((new_fcc_uah >= (fcc_uah / 2)) &&
-		((new_fcc_uah * 100) <= (fcc_uah * 105)))
-		return true;
-
-	pr_info("FCC rejected - not within valid limit\n");
-	return false;
-}
-
-static void fcc_learning_config(struct qpnp_bms_chip *chip, bool start)
-{
-	int rc, batt_temp;
-	struct raw_soc_params raw;
-	struct qpnp_vadc_result result;
-	int fcc_uah, new_fcc_uah, delta_cc_uah, delta_soc;
-
-	rc = qpnp_vadc_read(chip->vadc_dev, LR_MUX1_BATT_THERM, &result);
-	if (rc) {
-		pr_err("Unable to read batt_temp\n");
-		return;
-	} else {
-		batt_temp = (int)result.physical;
-	}
-
-	rc = read_soc_params_raw(chip, &raw, batt_temp);
-	if (rc) {
-		pr_err("Unable to read CC, cannot update FCC\n");
-		return;
-	}
-
-	if (start) {
-		chip->start_pc = interpolate_pc(chip->pc_temp_ocv_lut,
-			batt_temp / 10, raw.last_good_ocv_uv / 1000);
-		chip->start_cc_uah = calculate_cc(chip, raw.cc, CC, NORESET);
-		chip->start_real_soc = calculate_real_soc(chip,
-				batt_temp, &raw, chip->start_cc_uah);
-		pr_info("start_pc=%d, start_cc=%d, start_soc=%d real_soc=%d\n",
-			chip->start_pc, chip->start_cc_uah,
-			chip->start_soc, chip->start_real_soc);
-	} else {
-		chip->end_cc_uah = calculate_cc(chip, raw.cc, CC, NORESET);
-		delta_soc = 100 - chip->start_real_soc;
-		delta_cc_uah = abs(chip->end_cc_uah - chip->start_cc_uah);
-		new_fcc_uah = div_u64(delta_cc_uah * 100, delta_soc);
-		fcc_uah = calculate_fcc(chip, batt_temp);
-		pr_info("start_soc=%d, start_pc=%d, start_real_soc=%d, start_cc=%d, end_cc=%d, new_fcc=%d\n",
-			chip->start_soc, chip->start_pc, chip->start_real_soc,
-			chip->start_cc_uah, chip->end_cc_uah, new_fcc_uah);
-
-		if (is_new_fcc_valid(new_fcc_uah, fcc_uah))
-			update_fcc_learning_table(chip, new_fcc_uah,
-					chip->charge_cycles, batt_temp);
-	}
-}
-#else
 static int backup_new_fcc(struct qpnp_bms_chip *chip, int fcc_mah,
 							int chargecycles)
 {
@@ -3922,7 +3517,6 @@ static void fcc_learning_config(struct qpnp_bms_chip *chip, bool start)
 					chip->charge_cycles, batt_temp);
 	}
 }
-#endif
 
 #define MAX_CAL_TRIES	200
 #define MIN_CAL_UA	3000
@@ -3960,7 +3554,6 @@ static void batfet_open_work(struct work_struct *work)
 			chip->base + BMS1_S1_DELAY_CTL, 1);
 }
 
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 static void disable_sw_ocv_estimated_with_reason(bool disable, int reason)
 {
 	if (sw_ocv_estimated_stop_active_mask & reason) {
@@ -3970,7 +3563,6 @@ static void disable_sw_ocv_estimated_with_reason(bool disable, int reason)
 			sw_ocv_estimated_stop_reason &= ~reason;
 	}
 }
-#endif
 
 static void charging_began(struct qpnp_bms_chip *chip)
 {
@@ -3989,84 +3581,6 @@ static void charging_began(struct qpnp_bms_chip *chip)
 	mutex_unlock(&chip->last_ocv_uv_mutex);
 }
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-static void charging_ended(struct qpnp_bms_chip *chip)
-{
-	mutex_lock(&chip->last_soc_mutex);
-	chip->charge_start_tm_sec = 0;
-	chip->catch_up_time_sec = 0;
-	mutex_unlock(&chip->last_soc_mutex);
-
-	chip->end_soc = report_state_of_charge(chip);
-
-	mutex_lock(&chip->last_ocv_uv_mutex);
-	chip->soc_at_cv = -EINVAL;
-	chip->prev_chg_soc = -EINVAL;
-
-	
-	if (chip->end_soc > chip->start_soc) {
-		chip->charge_increase += (chip->end_soc - chip->start_soc);
-		if (chip->charge_increase > 100) {
-			chip->charge_cycles++;
-			chip->charge_increase = chip->charge_increase % 100;
-		}
-		if (chip->enable_fcc_learning)
-			backup_charge_cycle(chip);
-	}
-
-	if (get_battery_status(chip) == POWER_SUPPLY_STATUS_FULL) {
-		if (chip->enable_fcc_learning &&
-			(chip->start_soc <= chip->min_fcc_learning_soc) &&
-			(chip->start_pc <= chip->min_fcc_ocv_pc))
-			fcc_learning_config(chip, false);
-		chip->done_charging = true;
-		chip->last_soc_invalid = true;
-	} else if (chip->charging_adjusted_ocv > 0) {
-		pr_debug("Charging stopped before full, adjusted OCV = %d\n",
-				chip->charging_adjusted_ocv);
-		chip->last_ocv_uv = chip->charging_adjusted_ocv;
-	}
-
-	chip->charging_adjusted_ocv = -EINVAL;
-
-	mutex_unlock(&chip->last_ocv_uv_mutex);
-}
-
-static void battery_status_check(struct qpnp_bms_chip *chip)
-{
-	int status = get_battery_status(chip);
-
-	mutex_lock(&chip->status_lock);
-	if (chip->battery_status != status) {
-		pr_debug("status = %d, shadow status = %d\n",
-				status, chip->battery_status);
-		if (status == POWER_SUPPLY_STATUS_CHARGING) {
-			pr_debug("charging started\n");
-			charging_began(chip);
-		} else if (chip->battery_status
-				== POWER_SUPPLY_STATUS_CHARGING) {
-			pr_debug("charging ended\n");
-			charging_ended(chip);
-		}
-
-		if (status == POWER_SUPPLY_STATUS_FULL) {
-			pr_debug("battery full\n");
-			enable_bms_irq(&chip->ocv_thr_irq);
-			
-			recalculate_soc(chip);
-		} else if (chip->battery_status
-				== POWER_SUPPLY_STATUS_FULL) {
-			pr_debug("battery not full any more\n");
-			disable_bms_irq(&chip->ocv_thr_irq);
-			
-		}
-
-		chip->battery_status = status;
-		schedule_work(&chip->recalc_work);
-	}
-	mutex_unlock(&chip->status_lock);
-}
-#else
 static void charging_ended(struct qpnp_bms_chip *chip)
 {
 	mutex_lock(&chip->last_soc_mutex);
@@ -4179,7 +3693,6 @@ static void battery_status_check(struct qpnp_bms_chip *chip)
 	}
 	mutex_unlock(&chip->status_lock);
 }
-#endif
 
 #define CALIB_WRKARND_DIG_MAJOR_MAX		0x03
 static void batfet_status_check(struct qpnp_bms_chip *chip)
@@ -4234,7 +3747,6 @@ static void battery_insertion_check(struct qpnp_bms_chip *chip)
 	mutex_unlock(&chip->vbat_monitor_mutex);
 }
 
-#if defined(CONFIG_MACH_B2_WLJ) && !(defined(CONFIG_HTC_BATT_8960)) || defined(CONFIG_MACH_B2_UL) && !(defined(CONFIG_HTC_BATT_8960))
 static int get_prop_bms_capacity(struct qpnp_bms_chip *chip)
 {
 	return report_state_of_charge(chip);
@@ -4290,7 +3802,7 @@ static int qpnp_bms_power_get_property(struct power_supply *psy,
 	}
 	return 0;
 }
-#else	
+	
 
 static ssize_t kernel_write(struct file *file, const char *buf,
 	size_t count, loff_t pos)
@@ -4361,11 +3873,7 @@ int pm8941_bms_get_batt_soc(int *result)
 		return -EINVAL;
 	}
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-	batt_level = state_of_charge = *result = recalculate_soc(the_chip);
-#else
 	state_of_charge = *result = recalculate_soc(the_chip);
-#endif
 
 	if (new_boot_soc && allow_ocv_time &&
 		(currtime_ms >= allow_ocv_time)) {
@@ -4378,7 +3886,6 @@ int pm8941_bms_get_batt_soc(int *result)
 		disable_ocv_update_with_reason(false, OCV_UPDATE_STOP_BIT_BOOT_UP);
 	}
 
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 	if (allow_sw_ocv_est_time &&
 			(currtime_ms >= allow_sw_ocv_est_time)) {
 		pr_info("SW OCV can be estimated due to currtime(%lu) >= allow_sw_ocv_est_time(%lu) "
@@ -4388,7 +3895,6 @@ int pm8941_bms_get_batt_soc(int *result)
 		
 		disable_sw_ocv_estimated_with_reason(false, OCV_UPDATE_STOP_BIT_CABLE_OUT);
 	}
-#endif
 
 	if (the_chip->store_batt_data_soc_thre > 0
 			&& state_of_charge <= the_chip->store_batt_data_soc_thre
@@ -4521,22 +4027,6 @@ static int dump_all(void)
 
 	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
 		"cc(uAh)=%d,", bms_dbg.cc_uah);
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
-		"qb_start_ocv_uV=%d,", qb_mode_ocv_start);
-	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
-		"qb_start_cc_uAh=%d,", qb_mode_cc_start);
-	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
-		"qb_prev_cc_uAh=%d,", qb_mode_prev_cc);
-	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
-		"qb_cc_accumulate_uAh=%d,", qb_mode_cc_accumulation_uah);
-	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
-		"qb_time_accumulate_us=%lu,", qb_mode_time_accumulation);
-	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
-		"qb_cc_criteria_uAh=%d,", the_chip->qb_mode_cc_criteria_uAh);
-	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
-		"over_cc_criteria_count=%d,", qb_mode_over_criteria_count);
-#endif
 	get_bms_reg((void *)SOC_STORAGE_REG, &val);
 	len += scnprintf(batt_log_buf + len, BATT_LOG_BUF_LEN - len,
 		"SOC_STORAGE_REG=0x%lld,", val);
@@ -4568,8 +4058,9 @@ static int dump_all(void)
 		pr_warn("batt log length maybe out of buffer range!!!");
 
 	pr_debug("%s\n", batt_log_buf);
+	return 0;
+}
 
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 static int bms_set_chgcyl_table(struct device_node *data_node, int check_batt_id)
 {
 	struct property *prop;
@@ -4662,23 +4153,6 @@ int pm8941_bms_get_attr_text(char *buf, int size)
 	int len = 0;
 	u64 val = 0;
 	int i = 0;
-#else
-inline int pm8941_bms_dump_all(void)
-{
-	if (!the_chip) {
-		pr_err("called before init\n");
-		return -EINVAL;
-	}
-	dump_all();
-	return 0;
-}
-
-int pm8941_bms_get_attr_text(char *buf, int size)
-{
-	struct raw_soc_params raw;
-	int len = 0;
-	u64 val = 0;
-#endif
 	struct soc_params params;
 	
 	int batt_temp, rc, soc_rbatt, shdw_cc_uah;
@@ -4820,8 +4294,7 @@ int pm8941_bms_get_attr_text(char *buf, int size)
 	
 	
 
-
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)	
+	
 	if((the_chip) && (the_chip->enable_fcc_learning)){
 		len += scnprintf(buf + len, size - len,
 				"Charge_Cycles: %d\n", the_chip->charge_cycles);
@@ -4835,7 +4308,6 @@ int pm8941_bms_get_attr_text(char *buf, int size)
 					the_chip->fcc_learning_samples[i].chargecycles);
 		}
 	}
-#endif
 	return len;
 }
 
@@ -4862,7 +4334,6 @@ int pm8941_get_batt_id(int *result)
 	return 0;
 }
 
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 int pm8941_get_batt_id_mv(int *result)
 {
 	int64_t battery_id_raw;
@@ -4885,7 +4356,6 @@ int pm8941_get_batt_id_mv(int *result)
 
 	return 0;
 }
-#endif
 
 int pm8941_bms_get_percent_charge(struct qpnp_bms_chip *chip)
 {
@@ -5124,60 +4594,6 @@ int pm8941_bms_exit_qb_mode(void)
 	return 0;
 }
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-int pm8941_qb_mode_pwr_consumption_check(unsigned long time_since_last_update_ms)
-{
-	if (!the_chip) {
-		pr_err("called before init\n");
-		return -EINVAL;
-	}
-
-	if(qb_mode_enter && the_chip->qb_mode_cc_criteria_uAh) {
-		qb_mode_time_accumulation += time_since_last_update_ms;
-
-		if(qb_mode_ocv_start != bms_dbg.last_ocv_raw_uv) {
-			
-			qb_mode_cc_accumulation_uah += bms_dbg.cc_uah;
-			
-			qb_mode_prev_cc = qb_mode_cc_start = bms_dbg.cc_uah;
-
-			pr_info("ocv update happened OCV_uV/ori=%duV/%duV, cc_value:%d\n",
-				bms_dbg.last_ocv_raw_uv, qb_mode_ocv_start, bms_dbg.cc_uah);
-			qb_mode_ocv_start = bms_dbg.last_ocv_raw_uv;
-		} else {
-			if(!qb_mode_prev_cc)
-				
-				qb_mode_cc_accumulation_uah = (bms_dbg.cc_uah - qb_mode_cc_start);
-			else
-				qb_mode_cc_accumulation_uah += (bms_dbg.cc_uah - qb_mode_prev_cc);
-			qb_mode_prev_cc = bms_dbg.cc_uah;
-		}
-
-		if(qb_mode_time_accumulation > 3600000) {
-			if(qb_mode_cc_accumulation_uah > the_chip->qb_mode_cc_criteria_uAh) {
-				qb_mode_over_criteria_count++;
-				pr_warn("QB mode cc over criteria, cc_accu=%d, time_accu=%lu, count=%d\n",
-					qb_mode_cc_accumulation_uah, qb_mode_time_accumulation,
-					qb_mode_over_criteria_count);
-			} else
-				qb_mode_over_criteria_count = 0;
-
-			qb_mode_time_accumulation = 0;
-			qb_mode_cc_accumulation_uah = 0;
-			qb_mode_cc_start = bms_dbg.cc_uah;
-		}
-
-		if(qb_mode_over_criteria_count >= 3) {
-			pr_info("Force device shutdown due to over QB mode CC criteria!\n");
-			htc_gauge_event_notify(HTC_GAUGE_EVENT_QB_MODE_DO_REAL_POWEROFF);
-		}
-	} else {
-		
-	}
-	return 0;
-}
-#endif
-#else
 #define SIXTY_MINUTES_MS				(1000 * (3600 - 10))
 int pm8941_qb_mode_pwr_consumption_check(unsigned long time_since_last_update_ms)
 {
@@ -5237,7 +4653,6 @@ int pm8941_qb_mode_pwr_consumption_check(unsigned long time_since_last_update_ms
 	}
 	return 0;
 }
-#endif
 
 #define OCV_USE_LIMIT_EN		BIT(7)
 static int set_ocv_voltage_thresholds(struct qpnp_bms_chip *chip,
@@ -5470,7 +4885,6 @@ static int set_battery_data(struct qpnp_bms_chip *chip)
 		batt_data->cutoff_uv = -1;
 		batt_data->iterm_ua = -1;
 
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 		if(bms_set_chgcyl_table(node, id_result))
 		{
 			pr_info("No charging cycle setting\n");
@@ -5479,7 +4893,6 @@ static int set_battery_data(struct qpnp_bms_chip *chip)
 			pr_info("Charging cycle setting is done.\n");
 			chgcyl_checking_setting = 1;
 		}
-#endif
 
 #if !(defined(CONFIG_HTC_BATT_8960))
 		rc = of_batterydata_read_data(node, batt_data, battery_id);
@@ -5669,15 +5082,9 @@ static inline int bms_read_properties(struct qpnp_bms_chip *chip)
 				chip->min_fcc_learning_samples), GFP_KERNEL);
 		if (chip->fcc_learning_samples == NULL)
 			return -ENOMEM;
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
-		pr_debug("min-fcc-soc=%d, min-fcc-pc=%d, min-fcc-cycles=%d\n",
-			chip->min_fcc_learning_soc, chip->min_fcc_ocv_pc,
-			chip->min_fcc_learning_samples);
-#else
 		pr_info("min-fcc-learning_soc=%d, min-fcc-ocv_pc=%d, min-fcc-learning_samples=%d, fcc-resolution=%d\n",
 			chip->min_fcc_learning_soc, chip->min_fcc_ocv_pc,
 			chip->min_fcc_learning_samples, chip->fcc_resolution);
-#endif
 	}
 
 	if (rc) {
@@ -6156,25 +5563,8 @@ static int __devinit qpnp_bms_probe(struct spmi_device *spmi)
 #if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
 	if (chip->criteria_sw_est_ocv)
 		chip->criteria_sw_est_ocv = FIRST_SW_EST_OCV_THR_MS;
+#endif
 
-	if (chip->enable_fcc_learning) {
-		if (chip->battery_removed) {
-			rc = discard_backup_fcc_data(chip);
-			if (rc)
-				pr_err("Could not discard backed-up FCC data\n");
-		} else {
-			rc = read_chgcycle_data_from_backup(chip);
-			if (rc)
-				pr_err("Unable to restore charge-cycle data\n");
-
-			rc = read_fcc_data_from_backup(chip);
-			if (rc)
-				pr_err("Unable to restore FCC-learning data\n");
-			else
-				attempt_learning_new_fcc(chip);
-		}
-	}
-#else
 	if (chip->enable_fcc_learning) {
 			pr_info("Re-store the FCC data!\n");
 			rc = read_chgcycle_data_from_backup(chip);
@@ -6187,7 +5577,6 @@ static int __devinit qpnp_bms_probe(struct spmi_device *spmi)
 			else
 				attempt_learning_new_fcc(chip);
 	}
-#endif
 
 #if !(defined(CONFIG_HTC_BATT_8960))
 	rc = setup_vbat_monitoring(chip);
@@ -6249,9 +5638,10 @@ static int __devinit qpnp_bms_probe(struct spmi_device *spmi)
 		allow_ocv_time = currtime_ms + 3600000;
 		consistent_flag = true;
 	}
+
 	
 
-#if defined(CONFIG_MACH_B2_WLJ) && !(defined(CONFIG_HTC_BATT_8960)) || defined(CONFIG_MACH_B2_UL) && !(defined(CONFIG_HTC_BATT_8960))
+	
 	chip->bms_psy.name = "bms";
 	chip->bms_psy.type = POWER_SUPPLY_TYPE_BMS;
 	chip->bms_psy.properties = msm_bms_power_props;
@@ -6270,7 +5660,6 @@ static int __devinit qpnp_bms_probe(struct spmi_device *spmi)
 	}
 
 	chip->bms_psy_registered = true;
-#endif
 	vbatt = 0;
 	rc = get_battery_voltage(chip, &vbatt);
 	if (rc) {
@@ -6426,9 +5815,7 @@ static void bms_complete(struct device *dev)
 
 	if (htc_batt_bms_timer.no_ocv_update_period_ms > the_chip->criteria_sw_est_ocv
 		&& batt_level > DISABLE_SW_OCV_LEVEL_THRESHOLD
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
 		&& !(!!sw_ocv_estimated_stop_reason))
-#endif
 		pm8941_bms_estimate_ocv();
 }
 
