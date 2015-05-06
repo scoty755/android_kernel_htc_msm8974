@@ -569,6 +569,8 @@ static void htc_8974_add_usb_devices(void)
 	android_usb_pdata.product_id	= 0x0642;
 #elif defined(CONFIG_MACH_B2_WLJ)
 	android_usb_pdata.product_id	= 0x0634;
+#elif defined(CONFIG_MACH_EYE_UL)
+	android_usb_pdata.product_id	= 0x064C;
 #endif
 
 #if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
@@ -687,7 +689,7 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.normal_usb_temp_threshold = 450, 
 	.usb_temp_overheat_threshold = 650,
 #endif
-
+	
 	.icharger.name = "pm8941",
 	.icharger.get_charging_source = pm8941_get_charging_source,
 	.icharger.get_charging_enabled = pm8941_get_charging_enabled,

@@ -456,6 +456,7 @@ obj-$(CONFIG_MACH_B2_WLJ) += board-b2-gpiomux.o board-b2-audio.o
 obj-$(CONFIG_MACH_M8) += board-m8-gpiomux.o board-m8-audio.o
 obj-$(CONFIG_MACH_M8_WHL) += board-m8-gpiomux.o board-m8-audio.o
 obj-$(CONFIG_MACH_M8_WL) += board-m8-gpiomux.o board-m8-audio.o
+obj-$(CONFIG_MACH_EYE_UL) += board-eye-gpiomux.o board-m8-audio.o
 
 obj-$(CONFIG_HTC_HEADSET_PMIC) += htc_headset_pmic.o
 obj-$(CONFIG_HTC_HEADSET_GPIO) += htc_headset_gpio.o
@@ -472,3 +473,4 @@ obj-$(CONFIG_HTC_RPM_CMD) += rpm_htc_cmd.o
 obj-$(CONFIG_HTC_MONITOR) += htc_monitor.o
 
 obj-$(CONFIG_LCD_KCAL) += board_kcal.o kcal_ctrl.o
+obj-$(CONFIG_HAS_MACH_MEMUTILS) += memutils/

@@ -7,3 +7,6 @@ obj-$(CONFIG_MACH_B2_UL) += htc_b2-panel.o
 obj-$(CONFIG_MACH_B2_WLJ) += htc_b2-panel.o
 obj-$(CONFIG_MACH_A5) += htc_a5-panel.o
 obj-$(CONFIG_MACH_MEM_UL) += htc_mem-panel.o
+
+obj-$(CONFIG_MACH_A5) += htc_a5-panel.o
+obj-$(CONFIG_MACH_EYE_UL) += htc_eye-panel.o
