@@ -18,11 +18,8 @@
 #include <mach/gpiomux.h>
 #include <mach/socinfo.h>
 
-#ifdef CONFIG_MACH_B2_WLJ
 #define b2_WLJ_PID 314
-#else
 #define b2_UL_PID 315
-#endif
 
 static struct gpiomux_setting ap2mdm_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
@@ -281,7 +278,6 @@ static struct msm_gpiomux_config msm_cir_configs[] = {
 	},
 };
 
-#ifdef CONFIG_MACH_B2_WLJ
 static struct gpiomux_setting felica_cfg = {
 	.func = GPIOMUX_FUNC_2,
 	.drv = GPIOMUX_DRV_2MA,
@@ -302,8 +298,6 @@ static struct msm_gpiomux_config msm_felica_configs[] = {
 		},
 	},
 };
-
-#endif
 
 static struct msm_gpiomux_config msm_hsic_configs[] = {
 #if 0	
@@ -1202,10 +1196,8 @@ void __init msm_htc_8974_init_gpiomux(void)
 
 	msm_gpiomux_install(msm_cir_configs, ARRAY_SIZE(msm_cir_configs));
 
-#ifdef CONFIG_MACH_B2_WLJ
 	if (of_machine_pid() == b2_WLJ_PID)
 		msm_gpiomux_install(msm_felica_configs, ARRAY_SIZE(msm_felica_configs));
-#endif
 
 	if (socinfo_get_platform_subtype() == PLATFORM_SUBTYPE_MDM)
 		msm_gpiomux_install(mdm_configs,
