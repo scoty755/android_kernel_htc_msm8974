@@ -1362,9 +1362,11 @@ qpnp_chg_set_appropriate_vbatdet(struct qpnp_chg_chip *chip)
 	msleep(2000);
 	qpnp_chg_charge_en(chip, true);
 
+#ifdef CONFIG_MACH_B2_WLJ
 	if (chip->disable_pwrpath_after_eoc && is_batt_full_eoc_stop)
 		qpnp_chg_force_run_on_batt(chip, true);
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+	wake_unlock(&chip->set_vbatdet_lock);
+#else
 	wake_unlock(&chip->set_vbatdet_lock);
 #endif
 	return rc;
@@ -1960,7 +1962,9 @@ qpnp_chg_chgr_chg_fastchg_irq_handler(int irq, void *_chip)
 #endif
 
 	if (!chip->charging_disabled) {
+#ifdef CONFIG_MACH_B2_WLJ
 		is_batt_full_eoc_stop = false;
+#endif
 		schedule_delayed_work(&chip->eoc_work,
 			msecs_to_jiffies(EOC_CHECK_PERIOD_MS));
 		pm_stay_awake(chip->dev);
@@ -4343,7 +4347,7 @@ static int get_dc_chgpth_reg(void *data, u64 *val)
 	return 0;
 }
 
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+#ifdef CONFIG_MACH_B2_WLJ
 int pm8941_set_charger_after_eoc(bool enable)
 {
 	int rc = 0;
@@ -5425,7 +5429,7 @@ qpnp_chg_input_current_settled(struct qpnp_chg_chip *chip)
 #if !(defined(CONFIG_HTC_BATT_8960))
 	int rc, ibat_max_ma;
 	u8 reg, chgr_sts, ibat_trim, i;
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 	bool usb_present = qpnp_chg_is_usb_chg_plugged_in(chip);
 
 	if (!usb_present) {
@@ -7628,7 +7632,7 @@ qpnp_charger_read_dt_props(struct qpnp_chg_chip *chip)
 	OF_PROP_READ(chip, stored_pre_delta_vddmax_mv, "stored-pre-delta-vddmax-mv", rc, true);
 	OF_PROP_READ(chip, batt_stored_magic_num, "stored-batt-magic-num", rc, true);
 	OF_PROP_READ(chip, is_aicl_adapter_wa_enabled, "is-aicl-adapter-wa-enabled", rc, true);
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+#ifdef CONFIG_MACH_B2_WLJ
 	OF_PROP_READ(chip, disable_pwrpath_after_eoc, "disable-pwrpath-after-eoc", rc, true);
 #endif
 

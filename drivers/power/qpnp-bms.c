@@ -1171,7 +1171,7 @@ static int read_soc_params_raw(struct qpnp_bms_chip *chip,
 		convert_and_store_ocv(chip, raw, batt_temp, false);
 		
 		htc_batt_bms_timer.no_ocv_update_period_ms = 0;
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+#ifdef CONFIG_MACH_B2_WLJ
 		if(chip->criteria_sw_est_ocv == FIRST_SW_EST_OCV_THR_MS) {
 			rc = of_property_read_u32(chip->spmi->dev.of_node,
 				"qcom,criteria-sw-est-ocv",
@@ -1766,7 +1766,7 @@ static int pm8941_bms_estimate_ocv(void)
 #endif
 		
 		htc_batt_bms_timer.no_ocv_update_period_ms = 0;
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+#ifdef CONFIG_MACH_B2_WLJ
 		if(the_chip->criteria_sw_est_ocv == FIRST_SW_EST_OCV_THR_MS) {
 			rc = of_property_read_u32(the_chip->spmi->dev.of_node,
 				"qcom,criteria-sw-est-ocv",
@@ -5560,7 +5560,7 @@ static int __devinit qpnp_bms_probe(struct spmi_device *spmi)
 	device_init_wakeup(&spmi->dev, 1);
 
 	load_shutdown_data(chip);
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+#ifdef CONFIG_MACH_B2_WLJ
 	if (chip->criteria_sw_est_ocv)
 		chip->criteria_sw_est_ocv = FIRST_SW_EST_OCV_THR_MS;
 #endif
