@@ -149,7 +149,7 @@ static struct of_dev_auxdata msm8974_auxdata_lookup[] __initdata = {
 			"msm-tsens", NULL),
 	OF_DEV_AUXDATA("qcom,qcedev", 0xFD440000, \
 			"qcedev.0", NULL),
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+#ifdef CONFIG_MACH_B2_WLJ
 	OF_DEV_AUXDATA("qcom,qcrypto", 0xFD440000, \
 			"qcrypto.0", NULL),
 #endif
