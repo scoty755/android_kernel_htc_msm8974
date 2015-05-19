@@ -108,7 +108,7 @@ static struct alarm batt_charger_ctrl_alarm;
 static struct work_struct batt_charger_ctrl_work;
 struct workqueue_struct *batt_charger_ctrl_wq;
 static unsigned int charger_ctrl_stat;
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 static unsigned int ftm_charger_ctrl_stat;
 #endif
 
@@ -445,7 +445,7 @@ static ssize_t htc_battery_charger_switch(struct device *dev,
 	return count;
 }
 
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 static ssize_t htc_battery_ftm_charger_stat(struct device *dev,
 				struct device_attribute *attr,
 				char *buf)
@@ -718,7 +718,7 @@ static struct device_attribute htc_set_delta_attrs[] = {
 		htc_battery_trigger_store_battery_data),
 	__ATTR(qb_mode_shutdown, S_IWUSR | S_IWGRP, NULL,
 		htc_battery_qb_mode_shutdown_status),
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 	__ATTR(ftm_charger_control, S_IWUSR | S_IWGRP, htc_battery_ftm_charger_stat,
 		htc_battery_ftm_charger_switch),
 #endif
@@ -732,7 +732,7 @@ static struct device_attribute htc_battery_rt_attrs[] = {
 #if defined(CONFIG_MACH_DUMMY)
 	__ATTR(usb_temp_now, S_IRUGO, htc_battery_rt_attr_show, NULL),
 #endif
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 	__ATTR(batt_id_now, S_IRUGO, htc_battery_rt_attr_show, NULL),
 #endif
 };
@@ -1162,7 +1162,7 @@ static void batt_charger_ctrl_alarm_handler(struct alarm *alarm)
 	queue_work(batt_charger_ctrl_wq, &batt_charger_ctrl_work);
 }
 
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 static unsigned int get_htc_debug_flag(void)
 {
 
@@ -1192,7 +1192,7 @@ int htc_battery_core_update_changed(void)
 	int is_send_ac_uevent = 0;
 	int is_send_wireless_charger_uevent = 0;
 	static int batt_temp_over_68c_count = 0;
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 	unsigned int dbg_cfg = 0 ;
 #endif
 
@@ -1340,7 +1340,7 @@ int htc_battery_core_update_changed(void)
 	mutex_unlock(&battery_core_info.info_lock);
 
 	
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+#if defined(CONFIG_MACH_B2_WLJ)
 	BATT_EMBEDDED("ID=%d,level=%d,level_raw=%d,vol=%d,temp=%d,current=%d,"
 		"chg_src=%d,chg_en=%d,full_bat=%d,over_vchg=%d,"
 		"batt_state=%d,cable_ready=%d,overload=%d,ui_chg_full=%d,"
@@ -1474,7 +1474,7 @@ int htc_battery_core_register(struct device *dev,
 	if (htc_battery->func_qb_mode_shutdown_status)
 		battery_core_info.func.func_qb_mode_shutdown_status =
 					htc_battery->func_qb_mode_shutdown_status;
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 	if (htc_battery->func_ftm_charger_control)
 		battery_core_info.func.func_ftm_charger_control =
 					htc_battery->func_ftm_charger_control;
