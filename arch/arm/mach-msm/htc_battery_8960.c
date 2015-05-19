@@ -89,7 +89,7 @@ static int charger_dis_temp_fault;
 static int charger_under_rating;
 static int charger_safety_timeout;
 static int batt_full_eoc_stop;
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 static enum ftm_charger_control_flag ftm_charger_control_flag;
 #endif
 
@@ -1060,7 +1060,7 @@ static int htc_batt_charger_control(enum charger_control_flag control)
 	return ret;
 }
 
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 static int htc_batt_ftm_charger_control(enum ftm_charger_control_flag control)
 {
 	int ret = 0;
@@ -1214,7 +1214,7 @@ static int htc_battery_get_rt_attr(enum htc_batt_rt_attr attr, int *val)
 		break;
 #endif
 
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 	case HTC_BATT_RT_ID:
 		if (htc_batt_info.igauge->get_battery_id_mv) {
 			ret = htc_batt_info.igauge->get_battery_id_mv(val);
@@ -1711,7 +1711,7 @@ inline static int is_voltage_critical_low(int voltage_mv)
 }
 
 #define CHG_ONE_PERCENT_LIMIT_PERIOD_MS	(1000 * 60)
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 #define LEVEL_GAP_BETWEEN_UI_AND_RAW	3
 #endif
 static void batt_check_overload(unsigned long time_since_last_update_ms)
@@ -1740,7 +1740,7 @@ static void batt_check_overload(unsigned long time_since_last_update_ms)
 				htc_batt_info.rep.overload = 1;
 
 		
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)	
+#if !defined(CONFIG_MACH_B2_WLJ)
 			if (htc_batt_info.rep.level - htc_batt_info.rep.level_raw
 					>= LEVEL_GAP_BETWEEN_UI_AND_RAW)
 				htc_batt_info.rep.overload = 1;
@@ -1884,7 +1884,7 @@ static void batt_level_adjust(unsigned long time_since_last_update_ms)
 		if (is_voltage_critical_low(htc_batt_info.rep.batt_vol)) {
 			critical_low_enter = 1;
 			
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+#if defined(CONFIG_MACH_B2_WLJ)
 			if (htc_batt_info.decreased_batt_level_check)
 #else
 			if (htc_batt_info.decreased_batt_level_check &&
@@ -2223,7 +2223,7 @@ static void batt_worker(struct work_struct *work)
 	static int first = 1;
 	static int prev_pwrsrc_enabled = 1;
 	static int prev_charging_enabled = 0;
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 	static int prev_ftm_charger_control_flag = FTM_ENABLE_CHARGER;
 #endif
 	int charging_enabled = prev_charging_enabled;
@@ -2340,7 +2340,7 @@ static void batt_worker(struct work_struct *work)
 		else
 			chg_dis_reason &= ~HTC_BATT_CHG_DIS_BIT_USR_TMR;
 
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 		if (ftm_charger_control_flag == FTM_STOP_CHARGER)
 			chg_dis_reason |= HTC_BATT_CHG_DIS_BIT_FTM;
 		else
@@ -2393,7 +2393,7 @@ static void batt_worker(struct work_struct *work)
 										htc_batt_info.rep.charging_source;
 
 		
-#if defined(CONFIG_MACH_B2_WLJ) || defined(CONFIG_MACH_B2_UL)
+#if defined(CONFIG_MACH_B2_WLJ)
 		pr_debug("[BATT] prev_chg_src=%d, prev_chg_en=%d,"
 				" chg_dis_reason/control/active=0x%x/0x%x/0x%x,"
 				" chg_limit_reason=0x%x,"
@@ -2563,7 +2563,7 @@ static void batt_worker(struct work_struct *work)
 	first = 0;
 	prev_charging_enabled = charging_enabled;
 	prev_pwrsrc_enabled = pwrsrc_enabled;
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 	prev_ftm_charger_control_flag = ftm_charger_control_flag;
 #endif
 
@@ -2992,7 +2992,7 @@ static int htc_battery_probe(struct platform_device *pdev)
 											htc_batt_trigger_store_battery_data;
 	htc_battery_core_ptr->func_qb_mode_shutdown_status =
 											htc_batt_qb_mode_shutdown_status;
-#if !defined(CONFIG_MACH_B2_WLJ) && !defined(CONFIG_MACH_B2_UL)
+#if !defined(CONFIG_MACH_B2_WLJ)
 	htc_battery_core_ptr->func_ftm_charger_control = htc_batt_ftm_charger_control;
 #endif
 
