@@ -447,131 +447,6 @@ struct htc_chg_timer {
 	unsigned long total_time_ms;
 };
 
-#if defined(CONFIG_MACH_B2_WLJ)
-static const struct qpnp_vadc_map_pt usb_adcmap_btm_threshold[] = {
-	{-200, 1668},
-	{-190, 1659},
-	{-180, 1651},
-	{-170, 1641},
-	{-160, 1632},
-	{-150, 1622},
-	{-140, 1611},
-	{-130, 1600},
-	{-120, 1589},
-	{-110, 1577},
-	{-100, 1565},
-	{-90, 1552},
-	{-80, 1539},
-	{-70, 1525},
-	{-60, 1511},
-	{-50, 1496},
-	{-40, 1481},
-	{-30, 1466},
-	{-20, 1449},
-	{-10, 1433},
-	{0, 1416},
-	{10, 1398},
-	{20, 1381},
-	{30, 1362},
-	{40, 1344},
-	{50, 1325},
-	{60, 1305},
-	{70, 1286},
-	{80, 1266},
-	{90, 1245},
-	{100, 1225},
-	{110, 1204},
-	{120, 1183},
-	{130, 1161},
-	{140, 1140},
-	{150, 1118},
-	{160, 1096},
-	{170, 1075},
-	{180, 1053},
-	{190, 1031},
-	{200, 1009},
-	{210, 987},
-	{220, 965},
-	{230, 943},
-	{240, 922},
-	{250, 900},
-	{260, 879},
-	{270, 857},
-	{280, 836},
-	{290, 815},
-	{300, 795},
-	{310, 774},
-	{320, 754},
-	{330, 734},
-	{340, 715},
-	{350, 695},
-	{360, 677},
-	{370, 658},
-	{380, 640},
-	{390, 622},
-	{400, 604},
-	{410, 587},
-	{420, 570},
-	{430, 554},
-	{440, 537},
-	{450, 522},
-	{460, 506},
-	{470, 491},
-	{480, 477},
-	{490, 462},
-	{500, 449},
-	{510, 435},
-	{520, 422},
-	{530, 409},
-	{540, 397},
-	{550, 385},
-	{560, 373},
-	{570, 361},
-	{580, 350},
-	{590, 339},
-	{600, 329},
-	{610, 319},
-	{620, 309},
-	{630, 300},
-	{640, 290},
-	{650, 281},
-	{660, 273},
-	{670, 264},
-	{680, 256},
-	{690, 248},
-	{700, 241},
-	{710, 233},
-	{720, 226},
-	{730, 219},
-	{740, 212},
-	{750, 206},
-	{760, 200},
-	{770, 193},
-	{780, 188},
-	{790, 182},
-	{800, 176},
-	{810, 171},
-	{820, 166},
-	{830, 161},
-	{840, 156},
-	{850, 151},
-	{860, 147},
-	{870, 142},
-	{880, 138},
-	{890, 134},
-	{900, 130},
-	{910, 126},
-	{920, 123},
-	{930, 119},
-	{940, 116},
-	{950, 112},
-	{960, 109},
-	{970, 106},
-	{980, 103},
-	{990, 100},
-	{1000, 97}
-};
-#endif
 struct pm8941_charger_data_store {
 	int	pre_delta_vddmax_mv_backup;
 };
@@ -647,10 +522,6 @@ qpnp_chg_set_appropriate_battery_current(struct qpnp_chg_chip *chip);
 static int qpnp_chg_ibatmax_set(struct qpnp_chg_chip *chip, int chg_current);
 int htc_battery_is_support_qc20(void);
 int htc_battery_check_cable_type_from_usb(void);
-#if defined(CONFIG_MACH_B2_WLJ)
-static int32_t read_usb_temperature_mpp2(struct qpnp_chg_chip *chip);
-static int64_t read_usb_temperature_mpp2_vol(struct qpnp_chg_chip *chip);
-#endif
 static struct of_device_id qpnp_charger_match_table[] = {
 	{ .compatible = QPNP_CHARGER_DEV_NAME, },
 	{}
@@ -1362,13 +1233,8 @@ qpnp_chg_set_appropriate_vbatdet(struct qpnp_chg_chip *chip)
 	msleep(2000);
 	qpnp_chg_charge_en(chip, true);
 
-#ifdef CONFIG_MACH_B2_WLJ
-	if (chip->disable_pwrpath_after_eoc && is_batt_full_eoc_stop)
-		qpnp_chg_force_run_on_batt(chip, true);
 	wake_unlock(&chip->set_vbatdet_lock);
-#else
-	wake_unlock(&chip->set_vbatdet_lock);
-#endif
+
 	return rc;
 }
 #endif 
@@ -1962,9 +1828,6 @@ qpnp_chg_chgr_chg_fastchg_irq_handler(int irq, void *_chip)
 #endif
 
 	if (!chip->charging_disabled) {
-#ifdef CONFIG_MACH_B2_WLJ
-		is_batt_full_eoc_stop = false;
-#endif
 		schedule_delayed_work(&chip->eoc_work,
 			msecs_to_jiffies(EOC_CHECK_PERIOD_MS));
 		pm_stay_awake(chip->dev);
@@ -3015,11 +2878,7 @@ static void retry_aicl_mechanism(struct qpnp_chg_chip *chip)
 			pr_err("AICL: error reading USBIN channel = %d, rc = %d\n",
 						USBIN, rc);
 		usbin = (int)result.physical;
-#if defined(CONFIG_MACH_B2_WLJ)
-				usb_target_ma = USB_MA_1700;
-#else
 				usb_target_ma = USB_MA_1600;
-#endif
 		pr_info("AICL: retry triggered, total_ms=%ld, usbin=%d, usb_target_ma=%d\n",
 			retry_aicl_timer.total_time_ms, usbin, usb_target_ma);
 		retry_aicl_timer.total_time_ms = 0;
@@ -4347,24 +4206,6 @@ static int get_dc_chgpth_reg(void *data, u64 *val)
 	return 0;
 }
 
-#ifdef CONFIG_MACH_B2_WLJ
-int pm8941_set_charger_after_eoc(bool enable)
-{
-	int rc = 0;
-
-	if (!the_chip) {
-		pr_err("called before init\n");
-		return -EINVAL;
-	}
-
-	qpnp_chg_force_run_on_batt(the_chip, false);
-
-	
-	qpnp_chg_charge_en(the_chip, enable);
-
-	return rc;
-}
-#endif
 
 static void dump_reg(void)
 {
@@ -4676,9 +4517,6 @@ int pm8941_is_batt_full_eoc_stop(int *result)
 int pm8941_charger_get_attr_text(char *buf, int size)
 {
 	int rc;
-#if defined(CONFIG_MACH_B2_WLJ)
-	int usb_temp, usb_temp_vol;
-#endif
 	struct qpnp_vadc_result result;
 	int len = 0;
 	u64 val = 0;
@@ -4766,12 +4604,7 @@ int pm8941_charger_get_attr_text(char *buf, int size)
 	}
 	len += scnprintf(buf + len, size - len,
 			"USBIN(uV): %d;\n", (int)result.physical);
-#if defined(CONFIG_MACH_B2_WLJ)
-	usb_temp = (int)read_usb_temperature_mpp2(the_chip);
-	usb_temp_vol = (int)read_usb_temperature_mpp2_vol(the_chip);
-	len += scnprintf(buf + len, size - len, "usb_temperature: %d;\n", usb_temp);
-	len += scnprintf(buf + len, size - len, "usb_temperature_adc: %d;\n", usb_temp_vol);
-#endif
+
 	len += scnprintf(buf + len, size - len,
 			"AC_SAFETY_TIMEOUT(bool): %d;\n", (int)is_ac_safety_timeout);
 
@@ -5100,115 +4933,6 @@ module_param_call(thermal_mitigation, set_therm_mitigation_level,
 					param_get_uint,
 					&thermal_mitigation, 0644);
 
-#if defined(CONFIG_MACH_B2_WLJ)
-static int32_t pm8941_adc_map_temp_voltage(const struct qpnp_vadc_map_pt *pts,
-		uint32_t tablesize, int32_t input, int64_t *output)
-{
-	bool descending = 1;
-	uint32_t i = 0;
-
-	if (pts == NULL)
-		return -EINVAL;
-
-	
-	if (tablesize > 1) {
-		if (pts[0].y < pts[1].y)
-			descending = 0;
-	}
-
-	while (i < tablesize) {
-		if ((descending == 1) && (pts[i].y < input)) {
-			break;
-		} else if ((descending == 0) && (pts[i].y > input)) {
-			break;
-		} else {
-			i++;
-		}
-	}
-
-	if (i == 0) {
-		*output = pts[0].x;
-	} else if (i == tablesize) {
-		*output = pts[tablesize-1].x;
-	} else {
-		
-		
-		*output = (((int32_t) ((pts[i].x - pts[i-1].x)*
-			(input - pts[i-1].y))/
-			(pts[i].y - pts[i-1].y))+
-			pts[i-1].x);
-	}
-
-	return 0;
-}
-
-static int32_t read_usb_temperature_mpp2(struct qpnp_chg_chip *chip)
-{
-	int rc;
-	struct qpnp_vadc_result result;
-	struct qpnp_vadc_result adc_chan_result;
-	int64_t usb_temp_vol = 0;
-
-	rc = qpnp_vadc_read(chip->vadc_dev, P_MUX2_1_1, &result);
-	if (rc) {
-		pr_err("error reading batt id channel = %d, rc = %d\n",
-					P_MUX2_1_1, rc);
-		return rc;
-	}
-	usb_temp_vol = result.physical;
-	usb_temp_vol = (int)usb_temp_vol / 1000;
-
-	pm8941_adc_map_temp_voltage(
-			usb_adcmap_btm_threshold,
-			ARRAY_SIZE(usb_adcmap_btm_threshold),
-			(int32_t)usb_temp_vol,
-			&adc_chan_result.physical);
-	return adc_chan_result.physical;
-}
-
-static int64_t read_usb_temperature_mpp2_vol(struct qpnp_chg_chip *chip)
-{
-	int rc;
-	struct qpnp_vadc_result result;
-
-	rc = qpnp_vadc_read(chip->vadc_dev, P_MUX2_1_1, &result);
-	if (rc) {
-		pr_err("error reading batt id channel = %d, rc = %d\n",
-					P_MUX2_1_1, rc);
-		return rc;
-	}
-
-	return result.physical;
-}
-
-int pm8941_get_usb_temperature(int *result)
-{
-	if (!the_chip) {
-		pr_warn("called before init\n");
-		return -EINVAL;
-	}
-
-	if(flag_keep_charge_on || flag_pa_recharge)
-		*result = 275;
-	else
-		*result = read_usb_temperature_mpp2(the_chip);
-
-	return 0;
-}
-
-int pm8941_usb_overheat_otg_mode_check(void)
-{
-	if (!the_chip) {
-		pr_warn("called before init\n");
-		return -EINVAL;
-	}
-
-	if(qpnp_chg_is_otg_en_set(the_chip))
-		switch_usb_to_charge_mode(the_chip);
-
-	return 0;
-}
-#endif
 
 int pm8941_store_battery_charger_data_emmc(void)
 {
@@ -5429,14 +5153,12 @@ qpnp_chg_input_current_settled(struct qpnp_chg_chip *chip)
 #if !(defined(CONFIG_HTC_BATT_8960))
 	int rc, ibat_max_ma;
 	u8 reg, chgr_sts, ibat_trim, i;
-#if !defined(CONFIG_MACH_B2_WLJ)
 	bool usb_present = qpnp_chg_is_usb_chg_plugged_in(chip);
 
 	if (!usb_present) {
 		pr_debug("Ignoring AICL settled, since USB is removed\n");
 		return 0;
 	}
-#endif
 	chip->aicl_settled = true;
 
 	if (!chip->ibat_calibration_enabled)
@@ -7632,9 +7354,6 @@ qpnp_charger_read_dt_props(struct qpnp_chg_chip *chip)
 	OF_PROP_READ(chip, stored_pre_delta_vddmax_mv, "stored-pre-delta-vddmax-mv", rc, true);
 	OF_PROP_READ(chip, batt_stored_magic_num, "stored-batt-magic-num", rc, true);
 	OF_PROP_READ(chip, is_aicl_adapter_wa_enabled, "is-aicl-adapter-wa-enabled", rc, true);
-#ifdef CONFIG_MACH_B2_WLJ
-	OF_PROP_READ(chip, disable_pwrpath_after_eoc, "disable-pwrpath-after-eoc", rc, true);
-#endif
 
 	if (rc) {
 		pr_err("failed to read required dt parameters %d\n", rc);
