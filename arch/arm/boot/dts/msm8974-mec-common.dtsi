@@ -9,10 +9,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-
-/include/ "dsi-panel-eye.dtsi"
+/include/ "dsi-panel-m8.dtsi"
 /include/ "msm8974-leds.dtsi"
-/include/ "msm8974-ncp6924.dtsi"
 
 &soc {
 	mhl_usb_detect {
@@ -23,11 +21,17 @@
 		status = "ok";
 	};
 	serial@f991d000 {
-		status = "disable";
+		rst = <&pm8941_gpios 20 0x00>;
 	};
 
 	qcom,mdss_mdp@fd900000 {
 		qcom,mdss-pref-prim-intf = "dsi";
+		qcom,mdss_dsi_m8_sharp_novatek_35595_1080p_cmd {
+			qcom,mdss-dsi-panel-timings =  [cf 3d 33 00 57 51 35 42 52 03 04 00];
+		};
+		qcom,mdss_dsi_m8_lg_novatek_35595_1080p_cmd {
+			qcom,mdss-dsi-panel-timings =  [cf 3d 33 00 57 51 35 42 52 03 04 00];
+		};
 	};
 
 	qcom,hdmi_tx@fd922100 {
@@ -44,28 +48,101 @@
                         nxp,ven-gpio = <&msmgpio 2 0x00>;
                         nxp,irq-gpio = <&msmgpio 144 0x00>;
                         nxp,fwdl-gpio = <&msmgpio 3 0x00>;
-                        nxp,ven_isinvert = <0>;
+                        nxp,ven_isinvert = <1>;
                         nxp,isalive = <1>;
                 };
 
-                htc_mcu@3a {
-                        compatible = "htc_mcu";
-                        reg = <0x3a>;
-                        interrupt-parent = <&msmgpio>;
-                        interrupts = <67 0x0>;
-                        mcu,intr-gpio  = <&msmgpio 67 0x00>;
-                        mcu,GS_chip_layout = <1>;
-                        mcu,Acceleration_axes  = <3>;
-                        mcu,Magnetic_axes  = <0>;
-                        mcu,Gyro_axes  = <3>;
-                        mcu,Cpu_wake_mcu-gpio    = <&msmgpio 76 0x00>;
-                        mcu,Reset-gpio    = <&msmgpio 89 0x00>;
-                        mcu,Chip_mode-gpio    = <&msmgpio 53 0x00>;
-                        mcu,ALS_goldh  = <0x09>;
-                        mcu,ALS_goldl  = <0x65>;
-                        mcu,proximity_debu_info = <1>;
-                };
         };
+	i2c@f9925000 {
+		cm3629@60 {
+			compatible = "CM3629";
+			reg = <0x60>;
+			interrupt-parent = <&msmgpio>;
+			interrupts = <75 0x02>;
+			interrupt-names = "cm3629";
+			cm3629,irq-gpio = <&msmgpio 75 0x00>;
+			cm3629,model = <0>;
+			cm3629,ps_select = <1>;
+			cm3629,levels = <17 55 79 468 940 6086 9087 15839 21161 65535>;
+			cm3629,golden_adc = <0x168D>;
+			cm3629,cm3629_slave_address = <0x60>;
+			cm3629,ps1_thd_set = <0x15>;
+			cm3629,ps1_thd_no_cal = <0x5f>;
+			cm3629,ps1_thd_with_cal = <0xD>;
+			cm3629,ps_calibration_rule = <1>;
+			cm3629,dynamical_threshold = <1>;
+			cm3629,dark_level = <3>;
+			cm3629,ps_duty = <0>;
+			cm3629,ps_it = <2>;
+			cm3629,ps_pers = <1>;
+			cm3629,ps_itb = <1>;
+			cm3629,ps_itr = <0>;
+		};
+	};
+	i2c@f9925000 {
+			htc_mcu@3a {
+			compatible = "htc_mcu";
+			reg = <0x3a>;
+			interrupt-parent = <&msmgpio>;
+			interrupts = <67 0x0>;
+			mcu,intr-gpio  = <&msmgpio 67 0x00>;
+			mcu,GS_chip_layout = <1>;
+			mcu,Acceleration_axes  = <4>;
+			mcu,Magnetic_axes  = <7>;
+			mcu,Gyro_axes  = <4>;
+			mcu,Cpu_wake_mcu-gpio    = <&msmgpio 76 0x00>;
+			mcu,Reset-gpio    = <&msmgpio 89 0x00>;
+			mcu,Chip_mode-gpio    = <&msmgpio 53 0x00>;
+			mcu,ALS_goldh  = <0x16>;
+			mcu,ALS_goldl  = <0x8D>;
+			mcu,proximity_debu_info = <1>;
+                };
+
+
+	};
+
+    i2c@f9925000 {
+        compass_yas53x@2e {
+            compatible = "htc_compass,yas53x";
+            reg = <0x2e>;
+            interrupt-parend = <&msmgpio>;
+            interrupts = <64 0x0>;
+            SR_2V85-supply = <&pm8941_l18>;
+            compass_yas53x,chip_layout  = <5>;
+        };
+    };
+
+	i2c@f9925000 {
+		compass_akm8963@d {
+            compatible = "htc_compass,akm8963";
+            reg = <0xd>;
+            interrupt-parent = <&msmgpio>;
+            interrupts = <64 0x0>;
+            SR_2v85-supply = <&pm8941_l18>;
+            compass_akm8963,layout     = <5>;
+            compass_akm8963,outbit     = <1>;
+            compass_akm8963,gpio_DRDY  = <&msmgpio 64 0x00>;
+            compass_akm8963,gpio_RST   = <0>;
+        };
+    };
+
+    i2c@f9925000 {
+        g_sensor_bma250@18 {
+            compatible = "htc_g_sensor,bma250_bosch";
+            reg = <0x18>;
+            interrupt-parent = <&msmgpio>;
+            interrupts = <68 0x0>;
+            SR_2v85-supply = <&pm8941_l18>;
+            g_sensor_bma250,intr        = <&msmgpio 68 0x00>;
+            g_sensor_bma250,chip_layout = <0>;
+            g_sensor_bma250,axis_map_x  = <0>;
+            g_sensor_bma250,axis_map_y  = <1>;
+            g_sensor_bma250,axis_map_z  = <2>;
+            g_sensor_bma250,negate_x    = <1>;
+            g_sensor_bma250,negate_y    = <0>;
+            g_sensor_bma250,negate_z    = <1>;
+        };
+    };
 
 	i2c@f9925000 {
 		tps61310@33 {
@@ -74,10 +151,11 @@
 			tps61310,tps61310_strb0 = <&pm8941_gpios 26 0x00>;
 			tps61310,tps61310_strb1 = <&pm8941_gpios 27 0x00>;
 			tps61310,flash_duration_ms = <600>;
-			tps61310,enable_FLT_1500mA = <1>;
+			tps61310,enable_FLT_1500mA = <0>;
 			tps61310,led_count = <1>;
 			tps61310,disable_tx_mask = <1>;
-			htc,dualflash = <1>;
+			/* TODO: read board_info to know if dual-flash is supported */
+			/* htc,board_info-source = <&htc_board_info>; */
 
 			tps61310_flash0: htc,tps61310_flash_0 {
 				label = "flash";
@@ -122,108 +200,6 @@
 	};
 
 	i2c@f9928000 {
-		lm3643@63 {
-			compatible = "LM3643_FLASHLIGHT";
-			reg = <0x63>;
-			lm3643,lm3643_hwen = <&pm8941_gpios 29 0x00>;
-			lm3643,lm3643_strobe = <&pm8941_gpios 30 0x00>;
-			lm3643,flash_duration_ms = <400>;
-			lm3643,enable_FLT_1500mA = <1>;
-			lm3643,led_count = <1>;
-			lm3643,disable_tx_mask = <1>;
-			htc,dualflash = <1>;
-
-			lm3643_flash0: htc,lm3643_flash_0 {
-				label = "flash";
-				linux,name = "flash_0_front";
-				linux,default-trigger =
-					"flash0_trigger_front";
-				htc,id = <0>;
-				htc,default-state = "off";
-				htc,max-current = <750>;
-			};
-
-			lm3643_flash1: htc,lm3643_flash_1 {
-				label = "flash";
-				linux,name = "flash_1_front";
-				linux,default-trigger =
-					"flash1_trigger_front";
-				htc,id = <1>;
-				htc,default-state = "off";
-				htc,max-current = <750>;
-			};
-
-			lm3643_torch0: htc,lm3643_torch_0 {
-				label = "torch";
-				linux,name = "torch_0_front";
-				linux,default-trigger =
-					"torch0_trigger_front";
-				htc,id = <0>;
-				htc,default-state = "off";
-				htc,max-current = <200>;
-			};
-
-			lm3643_torch1: htc,tps61310_torch_1 {
-				label = "torch";
-				linux,name = "torch_1_front";
-				linux,default-trigger =
-					"torch1_trigger_front";
-				htc,id = <1>;
-				htc,default-state = "off";
-				htc,max-current = <200>;
-			};
-		};
-		tps61310@33 {
-			compatible = "TPS61310_FL_FRONT";
-			reg = <0x33>;
-			tps61310,tps61310_strb0 = <&pm8941_gpios 29 0x00>;
-			tps61310,tps61310_strb1 = <&pm8941_gpios 30 0x00>;
-			tps61310,flash_duration_ms = <600>;
-			tps61310,enable_FLT_1500mA = <1>;
-			tps61310,led_count = <1>;
-			tps61310,disable_tx_mask = <1>;
-			htc,dualflash = <1>;
-
-			tps61310_flash0_front: htc,tps61310_flash_0 {
-				label = "flash";
-				linux,name = "flash_0_front";
-				linux,default-trigger =
-					"flash0_trigger_front";
-				htc,id = <0>;
-				htc,default-state = "off";
-				htc,max-current = <750>;
-			};
-
-			tps61310_flash1_front: htc,tps61310_flash_1 {
-				label = "flash";
-				linux,name = "flash_1_front";
-				linux,default-trigger =
-					"flash1_trigger_front";
-				htc,id = <1>;
-				htc,default-state = "off";
-				htc,max-current = <750>;
-			};
-
-			tps61310_torch0_front: htc,tps61310_torch_0 {
-				label = "torch";
-				linux,name = "torch_0_front";
-				linux,default-trigger =
-					"torch0_trigger_front";
-				htc,id = <0>;
-				htc,default-state = "off";
-				htc,max-current = <200>;
-			};
-
-			tps61310_torch1_front: htc,tps61310_torch_1 {
-				label = "torch";
-				linux,name = "torch_1_front";
-				linux,default-trigger =
-					"torch1_trigger_front";
-				htc,id = <1>;
-				htc,default-state = "off";
-				htc,max-current = <200>;
-			};
-		};
 		tps_65132@7C {
 			compatible = "disp-tps-65132";
 			reg = <0x7C>;
@@ -247,14 +223,6 @@
 			gpio    = <&msmgpio 27 3>;
 			keycode = <114>;	//vDN
 		};
-		key3 {
-			gpio    = <&msmgpio 93 3>;
-			keycode = <211>;	//KEY_HP
-		};
-		key4 {
-			gpio    = <&msmgpio 95 3>;
-			keycode = <212>;	//KEY_CAMERA
-		};
 	};
 
 	keyreset {
@@ -271,7 +239,7 @@
 		mgr,wire_alt = <2>;	/*uart alt*/
                 mgr,hs_typenum   = <2>;
                 mgr,hs_type      = <2 1>;
-                mgr,adc_max      = <1541 254>;
+                mgr,adc_max      = <1557 254>;
                 mgr,adc_min      = <255 0>;
 	};
 
@@ -292,6 +260,13 @@
 		hs_pmic,hs_controller   = <0>;
 		hs_pmic,hs_switch       = <0>;
 		qcom,headset-vadc 	= <&pm8941_vadc>;
+	};
+
+	headset_onewire {
+		compatible = "htc_headset,1wire";
+		hs_1wire,tx_level_shift_en = <&msmgpio 91 0x00>;
+		hs_1wire,one_wire_remote = <0x7E 0x7F 0x7D 0x7F 0x7B 0x7F>;
+		hs_1wire,onewire_tty_dev = "ttyHSL1";
 	};
 
 	hall_ak8789 {
@@ -335,8 +310,6 @@
 			"MIC BIAS3 External", "ANCRight Headset Mic",
 			"AMIC4", "MIC BIAS1 External",
 			"MIC BIAS1 External", "Handset Mic",
-			"AMIC5", "MIC BIAS4 External",
-			"MIC BIAS4 External", "Handset Mic",
 			"DMIC1", "MIC BIAS1 Internal1",
 			"MIC BIAS1 Internal1", "Digital Mic1",
 			"DMIC2", "MIC BIAS1 Internal1",
@@ -368,7 +341,7 @@
 		rcv-gpio-sel    = <&msmgpio 57 0>;
 		rcv-gpio-en     = <&msmgpio 103 0>;
 		wcd-intr-gpio     = <&msmgpio 54 0>;
-		wcd-intr-gpio-dir = <0>; //default input
+		wcd-intr-gpio-dir = <1>; //default output
 	};
 
        i2c@f9928000 {
@@ -399,20 +372,17 @@
 	};
 /*Audio config end*/
 
-	i2c@f9925000 {
-		ncp6924-regulator@10 {
-			ncp,enable-gpio = <&pm8941_gpios 22 0>;
+	qcom,pm8941@1 {
+		qcom,vib@c000 {
+			status = "okay";
+			compatible = "qcom,qpnp-vibrator";
+			reg = <0xc000 0x1000>;
+			label = "vibrator";
+			qcom,qpnp-vib-timeout-ms = <15000>;
+			qcom,qpnp-vib-vtg-level-mV = <3100>;
 		};
 	};
 
-	qcom,spmi@fc4c0000 {
-		qcom,pm8941@1 {
-			qcom,vibrator@c000 {
-				qcom,qpnp-vib-enlarge-enable = <1>;
-				qcom,qpnp-vib-enlarge-diff_value = <30>;
-			};
-		};
-	};
 	qcom,rpm-stats@fc19ffa0{
 		compatible = "qcom,rpm-stats";
 		reg = <0xfc19ffa0 0x60>;
@@ -421,20 +391,9 @@
 	};
 };
 
+
 &spmi_bus {
 	qcom,pm8941@1 {
-		qcom,vibrator-pwm {
-			compatible = "qcom,qpnp-vibrator-pwm";
-			status = "okay";
-			htc,ctrl_en = <&pm8941_gpios 14 0x00>;
-			pwm_value_1p = <85>;
-			label = "vibrator";
-			linux,default-trigger = "vibrator";
-			pwm-config = <0>;
-			lpg-select = <8>;
-			qcom,qpnp-vib-timeout-ms = <15000>;
-		};
-
 		qcom,leds@d800 {
 			status = "disabled";
 			qcom,wled_0 {
@@ -527,7 +486,7 @@
 
 	qcom,pad-pull-on = <0x0 0x3 0x3 0x1>; /* no-pull, pull-up, pull-up, pull-down */
 	qcom,pad-pull-off = <0x0 0x3 0x3 0x1>; /* no-pull, pull-up, pull-up, pull-down */
-	qcom,pad-drv-on = <0x4 0x4 0x4>; /* 10mA, 10mA, 10mA */
+	qcom,pad-drv-on = <0x3 0x3 0x2>; /* 8mA, 8mA, 6mA */
 	qcom,pad-drv-off = <0x0 0x0 0x0>; /* 2mA, 2mA, 2mA */
 	qcom,bus-speed-mode = "HS200_1p8v", "DDR_1p8v";
 	htc,slot-type = <0>;
@@ -562,7 +521,6 @@
 	qcom,pad-drv-on = <0x4 0x4 0x4>; /* 10mA, 10mA, 10mA */
 	qcom,pad-drv-off = <0x0 0x0 0x0>; /* 2mA, 2mA, 2mA */
 	htc,slot-type = <1>;
-	htc,expand-debounce = <300>;
 	status = "ok";
 };
 
@@ -579,7 +537,9 @@
 };
 
 &sdhc_2 {
-	qcom,pad-drv-on = <0x2 0x2 0x1>; /* 6mA, 6mA, 4mA */
+	qcom,pad-drv-on = <0x3 0x2 0x1>; /* 8mA, 6mA, 4mA */
+	qcom,pad-drv-on-uhs = <0x6 0x2 0x1>; /* 14mA, 6mA, 4mA */
+	qcom,pad-drv-on-sdr104 = <0x3 0x2 0x2>; /* 8mA, 6mA, 6mA */
 };
 
 &usb_otg {
@@ -595,19 +555,20 @@
 };
 
 / {
-	eye_batterydata: qcom,battery-data {
+	m8_batterydata: qcom,battery-data {
 		qcom,rpull-up-kohm = <100>;
 		qcom,vref-batt-therm = <1800000>;
 
-		/include/ "batterydata-eye-id1.dtsi"
-		/include/ "batterydata-eye-a3-id2.dtsi"
-		/include/ "batterydata-eye-unknown-id.dtsi"
+		/include/ "batterydata-m8-id1.dtsi"
+		/include/ "batterydata-m8-id2.dtsi"
+		/include/ "batterydata-m8-id3.dtsi"
+		/include/ "batterydata-m8-unknown-id.dtsi"
 	};
 };
 
 &pm8941_bms {
 	qcom,use-external-rsense;
-	qcom,battery-data = <&eye_batterydata>;
+	qcom,battery-data = <&m8_batterydata>;
 	qcom,low-voltage-calculate-soc-ms = <60000>;
 	qcom,low-soc-calculate-soc-ms = <60000>;
 	qcom,calculate-soc-ms = <60000>;
@@ -615,7 +576,7 @@
 	qcom,min-fcc-learning-soc = <20>;
 	qcom,min-fcc-ocv-pc = <30>;
 	qcom,min-fcc-learning-samples = <5>;
-	qcom,fcc-resolution = <13>;
+	qcom,fcc-resolution = <10>;
 	qcom,shutdown-vol-criteria = <3400000>;
 	qcom,stored-batt-magic-num= <(-1)>;
 	qcom,stored-batt-soc= <(-1)>;
@@ -631,8 +592,8 @@
 };
 
 &pm8941_chg {
-	qcom,vddmax-mv = <4400>;
-	qcom,vddsafe-mv = <4430>;
+	qcom,vddmax-mv = <4350>;
+	qcom,vddsafe-mv = <4360>;
 	qcom,vinmin-mv = <4400>;
 	qcom,ibatmax-ma = <1750>;
 	qcom,cold-threshold = <1>;

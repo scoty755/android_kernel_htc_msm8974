@@ -1238,17 +1238,38 @@ int htc_vreg_dump(int vreg_id, struct seq_file *m, char *vreg_buffer, int curr_l
 
         return curr_len;
 }
-#if defined(CONFIG_MACH_B2_UL)
-#define PN547_I2C_POWEROFF_SEQUENCE_FOR_B2
-#elif defined(CONFIG_MACH_EYE_UL)
+#if defined(CONFIG_MACH_EYE_UL)
 #define PN547_I2C_POWEROFF_SEQUENCE_FOR_EYE
+#elif defined(CONFIG_MACH_B2_UL)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_B2
 #elif defined(CONFIG_MACH_EYE_WL)
 #define PN547_I2C_POWEROFF_SEQUENCE_FOR_EYE
 #elif defined(CONFIG_MACH_EYE_WHL)
 #define PN547_I2C_POWEROFF_SEQUENCE_FOR_EYE
-#else
+#elif defined(CONFIG_MACH_MEC_TL)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC
+#elif defined(CONFIG_MACH_MEC_WHL)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC
+#elif defined(CONFIG_MACH_MEC_UL)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC
+#elif defined(CONFIG_MACH_MEC_DUG)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC
+#elif defined(CONFIG_MACH_MEC_DWG)
+#define PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC
 #endif
-#if defined(PN547_I2C_POWEROFF_SEQUENCE_FOR_B2)
+#if defined(PN547_I2C_POWEROFF_SEQUENCE_FOR_EYE)
+void force_disable_PM8941_VREG_ID_L22(void)
+{
+	int ret;
+	uint8_t voltage_sel = 0x00;
+	
+	
+	ret = spmi_write_data(qpnp_vregs.ctrl, &voltage_sel, 0x15546, 1);
+	if (ret) {
+                pr_err("force_disable_PM8941_VREG_ID_L22, SPMI write failed, err = %zu\n", ret);
+        }
+}
+#elif defined(PN547_I2C_POWEROFF_SEQUENCE_FOR_B2)
 void force_disable_PMICGPIO34(void)
 {
 	int ret;
@@ -1265,19 +1286,17 @@ void force_disable_PMICLVS1(void)
 	ret = spmi_write_data(qpnp_vregs.ctrl, &voltage_sel, 0x18046, 1);
 
 }
-#elif defined(PN547_I2C_POWEROFF_SEQUENCE_FOR_EYE)
-void force_disable_PM8941_VREG_ID_L22(void)
+#endif
+
+#if defined(PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC)
+void force_disable_PMICGPIO34(void)
 {
 	int ret;
-	uint8_t voltage_sel = 0x00;
-	
-	
-	ret = spmi_write_data(qpnp_vregs.ctrl, &voltage_sel, 0x15546, 1);
-	if (ret) {
-                pr_err("force_disable_PM8941_VREG_ID_L22, SPMI write failed, err = %zu\n", ret);
-        }
+	uint8_t voltage_sel = 0x10;
+
+	ret = spmi_write_data(qpnp_vregs.ctrl, &voltage_sel, 0xE140, 1);
+
 }
-#else
 #endif
 
 int htc_vregs_dump(char *vreg_buffer, int curr_len)
