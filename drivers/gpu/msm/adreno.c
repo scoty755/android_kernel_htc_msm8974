@@ -76,6 +76,7 @@
 
 #define KGSL_LOG_LEVEL_DEFAULT 3
 
+static void adreno_start_work(struct work_struct *work);
 static void adreno_input_work(struct work_struct *work);
 
 static struct devfreq_simple_ondemand_data adreno_ondemand_data = {
@@ -136,11 +137,16 @@ static struct adreno_device device_3d0 = {
 	.ft_pf_policy = KGSL_FT_PAGEFAULT_DEFAULT_POLICY,
 	.fast_hang_detect = 1,
 	.long_ib_detect = 1,
+	.start_work = __WORK_INITIALIZER(device_3d0.start_work,
+		adreno_start_work),
 	.input_work = __WORK_INITIALIZER(device_3d0.input_work,
 		adreno_input_work),
 };
 
 unsigned int ft_detect_regs[FT_DETECT_REGS_COUNT];
+
+static struct workqueue_struct *adreno_wq;
+
 
 #define ANY_ID (~0)
 #define NO_VER (~0)
@@ -222,7 +228,7 @@ static const struct {
 		512, 0, 2, SZ_128K, 0x3FF037, 0x3FF016 },
 };
 
-static int _wake_nice = -7;
+static unsigned int _wake_nice = -7;
 
 static unsigned int _wake_timeout = 100;
 
@@ -1665,6 +1671,9 @@ static int adreno_init(struct kgsl_device *device)
 	int i;
 	int ret;
 
+	
+	adreno_wq = alloc_workqueue("adreno", WQ_HIGHPRI | WQ_UNBOUND, 1);
+
 	kgsl_pwrctrl_set_state(device, KGSL_STATE_INIT);
 	if (test_bit(ADRENO_DEVICE_INITIALIZED, &adreno_dev->priv))
 		return 0;
@@ -1827,21 +1836,39 @@ error_clk_off:
 	return status;
 }
 
+static int _status;
+
+static void adreno_start_work(struct work_struct *work)
+{
+	struct adreno_device *adreno_dev = container_of(work,
+		struct adreno_device, start_work);
+	struct kgsl_device *device = &adreno_dev->dev;
+
+	
+	set_user_nice(current, _wake_nice);
+
+	kgsl_mutex_lock(&device->mutex, &device->mutex_owner);
+	if (!test_bit(ADRENO_DEVICE_STARTED, &adreno_dev->priv))
+		_status = _adreno_start(adreno_dev);
+	else
+		_status = 0;
+	kgsl_mutex_unlock(&device->mutex, &device->mutex_owner);
+}
+
 static int adreno_start(struct kgsl_device *device, int priority)
 {
 	struct adreno_device *adreno_dev = ADRENO_DEVICE(device);
-	int nice = task_nice(current);
-	int ret;
 
-	if (priority && (_wake_nice < nice))
-		set_user_nice(current, _wake_nice);
+	
+	if (!priority)
+		return _adreno_start(adreno_dev);
 
-	ret = _adreno_start(adreno_dev);
+	queue_work(adreno_wq, &adreno_dev->start_work);
+	kgsl_mutex_unlock(&device->mutex, &device->mutex_owner);
+	flush_work(&adreno_dev->start_work);
+	kgsl_mutex_lock(&device->mutex, &device->mutex_owner);
 
-	if (priority)
-		set_user_nice(current, nice);
-
-	return ret;
+	return _status;
 }
 
 static int adreno_stop(struct kgsl_device *device)
@@ -1919,15 +1946,15 @@ int adreno_reset(struct kgsl_device *device)
 	return ret;
 }
 
-static int _ft_sysfs_store(const char *buf, size_t count, int *ptr)
+static int _ft_sysfs_store(const char *buf, size_t count, unsigned int *ptr)
 {
 	char temp[20];
-	long val;
+	unsigned long val;
 	int rc;
 
 	snprintf(temp, sizeof(temp), "%.*s",
 			 (int)min(count, sizeof(temp) - 1), buf);
-	rc = kstrtol(temp, 0, &val);
+	rc = kstrtoul(temp, 0, &val);
 	if (rc)
 		return rc;
 
@@ -2165,36 +2192,6 @@ static ssize_t _ft_hang_intr_status_show(struct device *dev,
 		test_bit(ADRENO_DEVICE_HANG_INTR, &adreno_dev->priv) ? 1 : 0);
 }
 
-/**
- * _wake_nice_store() - Store nice level for the higher priority GPU start
- * thread
- * @dev: device ptr
- * @attr: Device attribute
- * @buf: value to write
- * @count: size of the value to write
- *
- */
-static ssize_t _wake_nice_store(struct device *dev,
-				     struct device_attribute *attr,
-				     const char *buf, size_t count)
-{
-	return _ft_sysfs_store(buf, count, &_wake_nice);
-}
-
-/**
- * _wake_nice_show() -  Show nice level for the higher priority GPU start
- * thread
- * @dev: device ptr
- * @attr: Device attribute
- * @buf: value read
- */
-static ssize_t _wake_nice_show(struct device *dev,
-					struct device_attribute *attr,
-					char *buf)
-{
-	return snprintf(buf, PAGE_SIZE, "%d\n", _wake_nice);
-}
-
 #define FT_DEVICE_ATTR(name) \
 	DEVICE_ATTR(name, 0644,	_ ## name ## _show, _ ## name ## _store);
 
@@ -2204,7 +2201,7 @@ FT_DEVICE_ATTR(ft_fast_hang_detect);
 FT_DEVICE_ATTR(ft_long_ib_detect);
 FT_DEVICE_ATTR(ft_hang_intr_status);
 
-static FT_DEVICE_ATTR(wake_nice);
+static DEVICE_INT_ATTR(wake_nice, 0644, _wake_nice);
 static FT_DEVICE_ATTR(wake_timeout);
 
 const struct device_attribute *ft_attr_list[] = {
@@ -2212,7 +2209,7 @@ const struct device_attribute *ft_attr_list[] = {
 	&dev_attr_ft_pagefault_policy,
 	&dev_attr_ft_fast_hang_detect,
 	&dev_attr_ft_long_ib_detect,
-	&dev_attr_wake_nice,
+	&dev_attr_wake_nice.attr,
 	&dev_attr_wake_timeout,
 	&dev_attr_ft_hang_intr_status,
 	NULL,

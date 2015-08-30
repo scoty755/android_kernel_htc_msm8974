@@ -465,6 +465,8 @@ static void htc_8974_add_usb_devices(void)
 	android_usb_pdata.vzw_unmount_cdrom = 1;
 #elif defined(CONFIG_MACH_M8_UHL)
 	android_usb_pdata.product_id	= 0x063A;
+#elif defined(CONFIG_MACH_M8_DUG)
+	android_usb_pdata.product_id	= 0x063B;
 #elif defined(CONFIG_MACH_B2_UHL)
 	android_usb_pdata.product_id	= 0x0642;
 #elif defined(CONFIG_MACH_B2_UL)
