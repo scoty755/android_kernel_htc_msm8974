@@ -446,7 +446,6 @@ static int kgsl_pwrctrl_idle_timer_store(struct device *dev,
 	unsigned int val = 0;
 	struct kgsl_device *device = kgsl_device_from_dev(dev);
 	struct kgsl_pwrctrl *pwr;
-	const long div = 1000/HZ;
 	int ret;
 
 	if (device == NULL)
@@ -459,9 +458,8 @@ static int kgsl_pwrctrl_idle_timer_store(struct device *dev,
 
 	kgsl_mutex_lock(&device->mutex, &device->mutex_owner);
 
-	
-	val /= div;
-	pwr->interval_timeout = val;
+	/* Let the timeout be requested in ms, store in jiffies. */
+	pwr->interval_timeout = msecs_to_jiffies(val);
 
 	kgsl_mutex_unlock(&device->mutex, &device->mutex_owner);
 
@@ -473,12 +471,12 @@ static int kgsl_pwrctrl_idle_timer_show(struct device *dev,
 					char *buf)
 {
 	struct kgsl_device *device = kgsl_device_from_dev(dev);
-	int mul = 1000/HZ;
 	if (device == NULL)
 		return 0;
-	
+
+	/* Show the idle_timeout in msec */
 	return snprintf(buf, PAGE_SIZE, "%d\n",
-		device->pwrctrl.interval_timeout * mul);
+		jiffies_to_msecs(device->pwrctrl.interval_timeout));
 }
 
 static int kgsl_pwrctrl_pmqos_latency_store(struct device *dev,
@@ -1061,7 +1059,7 @@ int kgsl_pwrctrl_init(struct kgsl_device *device)
 	pwr->power_flags = 0;
 
 	pwr->idle_needed = pdata->idle_needed;
-	pwr->interval_timeout = pdata->idle_timeout;
+	pwr->interval_timeout = msecs_to_jiffies(pdata->idle_timeout);
 	pwr->strtstp_sleepwake = pdata->strtstp_sleepwake;
 	pwr->ebi1_clk = clk_get(&pdev->dev, "bus_clk");
 	if (IS_ERR(pwr->ebi1_clk))
@@ -1580,6 +1578,7 @@ static int _check_active_count(struct kgsl_device *device, int count)
 int kgsl_active_count_wait(struct kgsl_device *device, int count)
 {
 	int result = 0;
+	long wait_jiffies = msecs_to_jiffies(1000);
 
 	BUG_ON(!mutex_is_locked(&device->mutex));
 
@@ -1587,7 +1586,7 @@ int kgsl_active_count_wait(struct kgsl_device *device, int count)
 		int ret;
 		kgsl_mutex_unlock(&device->mutex, &device->mutex_owner);
 		ret = wait_event_timeout(device->active_cnt_wq,
-			_check_active_count(device, count), HZ);
+			_check_active_count(device, count), wait_jiffies);
 		kgsl_mutex_lock(&device->mutex, &device->mutex_owner);
 		result = ret == 0 ? -ETIMEDOUT : 0;
 	}
