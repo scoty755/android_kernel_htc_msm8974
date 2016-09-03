@@ -426,8 +426,9 @@
 			compatible = "qcom,qpnp-vibrator";
 			reg = <0xc000 0x1000>;
 			label = "vibrator";
-			qcom,qpnp-vib-timeout-ms = <15000>;
-			qcom,qpnp-vib-vtg-level-mV = <3100>;
+			qcom,vib-timeout-ms = <15000>;
+			qcom,vib-vtg-level-mV = <3100>;
+			status = "okay";
 		};
 	};
 
