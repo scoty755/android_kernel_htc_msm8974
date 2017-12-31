@@ -686,7 +686,6 @@ struct dwc3_scratchpad_array {
  * @three_stage_setup: set if we perform a three phase setup
  * @ep0_bounced: true when we used bounce buffer
  * @ep0_expect_in: true when we expect a DATA IN transfer
- * @start_config_issued: true when StartConfig command has been issued
  * @setup_packet_pending: true when there's a Setup Packet in FIFO. Workaround
  * @needs_fifo_resize: not all users might want fifo resizing, flag it
  * @resize_fifos: tells us it's ok to reconfigure our TxFIFO sizes.
