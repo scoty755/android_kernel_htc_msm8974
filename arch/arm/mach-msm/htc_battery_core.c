@@ -728,7 +728,7 @@ static struct device_attribute htc_battery_rt_attrs[] = {
 	__ATTR(batt_current_now, S_IRUGO, htc_battery_rt_attr_show, NULL),
 	__ATTR(batt_temp_now, S_IRUGO, htc_battery_rt_attr_show, NULL),
 	__ATTR(voltage_now, S_IRUGO, htc_battery_rt_attr_show, NULL),
-#if defined(CONFIG_MACH_DUMMY)
+#if defined(CONFIG_MACH_B2_WLJ)
 	__ATTR(usb_temp_now, S_IRUGO, htc_battery_rt_attr_show, NULL),
 #endif
 	__ATTR(batt_id_now, S_IRUGO, htc_battery_rt_attr_show, NULL),
