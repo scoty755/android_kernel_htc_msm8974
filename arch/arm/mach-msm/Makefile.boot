@@ -70,11 +70,11 @@ else ifeq ($(CONFIG_MACH_M8_DUG), y)
 	dtb-$(CONFIG_ARCH_MSM8974)	+= msm8974pro-ab-pm8941-m8dug-xb.dtb
 	dtb-$(CONFIG_ARCH_MSM8974)	+= msm8974pro-ab-pm8941-m8dug-xc.dtb
 else ifeq ($(CONFIG_MACH_B2_WLJ), y)
-	htc_dtb-$(CONFIG_ARCH_MSM8974)  += msm8974pro-ab-pm8941-b2wlj.dtb
-	htc_dtb-$(CONFIG_ARCH_MSM8974)  += msm8974pro-ab-pm8941-b2wlj-xb.dtb
+	dtb-$(CONFIG_ARCH_MSM8974)  += msm8974pro-ab-pm8941-b2wlj.dtb
+	dtb-$(CONFIG_ARCH_MSM8974)  += msm8974pro-ab-pm8941-b2wlj-xb.dtb
 else ifeq ($(CONFIG_MACH_B2_UL), y)
-	htc_dtb-$(CONFIG_ARCH_MSM8974)  += msm8974pro-ab-pm8941-b2ul.dtb
-	htc_dtb-$(CONFIG_ARCH_MSM8974)  += msm8974pro-ab-pm8941-b2ul-xb.dtb
+	dtb-$(CONFIG_ARCH_MSM8974)  += msm8974pro-ab-pm8941-b2ul.dtb
+	dtb-$(CONFIG_ARCH_MSM8974)  += msm8974pro-ab-pm8941-b2ul-xb.dtb
 else
 	dtb-$(CONFIG_ARCH_MSM8974)	+= msm8974-v1-cdp.dtb
 	dtb-$(CONFIG_ARCH_MSM8974)	+= msm8974-v1-fluid.dtb
