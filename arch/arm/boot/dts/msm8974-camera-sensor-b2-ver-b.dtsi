@@ -12,6 +12,51 @@
  */
 
 &soc {
+	spi@f9967000 {
+		cell-index = <11>;
+		compatible = "qcom,spi-qup-v2";
+		reg = <0xf9967000 0x1000>;
+		spi-max-frequency = <25000000>;	// 960000, 4800000, 9600000, 15000000, 19200000, 25000000, 50000000
+		#address-cells = <1>;
+		#size-cells = <0>;
+		interrupts = <0 105 0>;
+		qcom,gpio-mosi = <&msmgpio 81 0>;
+		qcom,gpio-miso = <&msmgpio 82 0>;
+		qcom,gpio-clk  = <&msmgpio 84 0>;
+		qcom,gpio-cs0  = <&msmgpio 83 0>;
+
+		qcom,master-id = <84>;
+
+		spi_rawchip@0 {
+			compatible = "spi_rawchip";
+			reg = <0>;
+			spi-max-frequency = <25000000>;
+		};
+	};
+
+	yushanII {
+		compatible = "yushanII";
+		reg = <0x00>;
+		rawchip-reset = <&pm8941_gpios 14 0>;
+		raw_mclk = <&msmgpio 15 0>;
+
+		interrupt-parent = <&msmgpio>;
+		interrupts = <80 0x4>,
+			     <79 0x4>;
+		interrupt-names = "rawchip_intr0", "rawchip_intr1";
+
+		raw-vreg-type = <1 2>;                //VREG type for below two item, 1 => REG_VS,  2=>REG_GPIO
+		raw_1v8-supply = <&pm8941_lvs1>;      //1V8 enable by REG_VS, define raw_1v8-gpio if type = REG_GPIO
+		raw_1v2-gpio = <&pm8941_gpios 8 0>;   //1V2 enable by REG_GPIO, define raw_1v2-supply if type = REG_VS
+	};
+
+	led_flash0: qcom,camera-led-flash {
+		cell-index = <0>;
+		compatible = "qcom,camera-led-flash";
+		qcom,flash-type = <1>;
+		qcom,torch-source = <&pm8941_torch>;
+		qcom,flash-source = <&pm8941_flash0 &pm8941_flash1>;
+	};
 };
 
 &cci {
