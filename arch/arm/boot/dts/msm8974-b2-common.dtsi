@@ -36,6 +36,8 @@
 	};
 
         i2c@f9925000 {
+    qcom,clk-ctl-xfer;
+
                 nxp_pn544_nfc@28 {
                         compatible = "nxp,pn544-nfc";
                         reg = <0x28>;
@@ -442,6 +444,19 @@
 
 &spmi_bus {
 	qcom,pm8941@1 {
+		qcom,leds@d000 {
+			qcom,rgb_0 {
+				/delete-property/ linux,default-trigger;
+			};
+
+			qcom,rgb_1 {
+				/delete-property/ linux,default-trigger;
+			};
+		};
+
+		qcom,leds@d300 {
+			status = "disabled";
+		};
 		qcom,leds@d800 {
 			status = "disabled";
 			qcom,wled_0 {
@@ -458,7 +473,6 @@
 				qcom,switch-freq = <11>;
 				qcom,ovp-val = <2>;
 				qcom,num-strings = <2>;
-				qcom,cabc-en = <1>;
 				qcom,id = <0>;
 			};
 		};
@@ -496,6 +510,10 @@
 		};
 
 		qcom,leds@e100 {
+			status = "disabled";
+		};
+
+		qcom,leds@e200 {
 			status = "disabled";
 		};
 	};
