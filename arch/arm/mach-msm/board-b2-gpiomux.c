@@ -1009,6 +1009,51 @@ static struct msm_gpiomux_config msm_sensor_configs[] __initdata = {
 	},
 };
 
+static struct msm_gpiomux_config msm_blsp_rawchip_spi_configs[] __initdata = {
+	/* gpio config for Rawchip SPI - blsp12 */
+	{
+		.gpio	   =  81, //CAM_PIN_GPIO_MCAM_SPI_DO,
+		.settings = {
+			[GPIOMUX_ACTIVE] = &cam_settings[22], /*A FUNC1 2MA*/
+			[GPIOMUX_SUSPENDED] = &cam_settings[10], /*O(L) 2MA*/
+		},
+	},
+	{
+		.gpio	   = 82, //CAM_PIN_GPIO_MCAM_SPI_DI,
+		.settings = {
+			[GPIOMUX_ACTIVE] = &cam_settings[22], /*A FUNC1 2MA*/
+			[GPIOMUX_SUSPENDED] = &cam_settings[10], /* I(L) 2MA ??? */
+		},
+	},
+	{
+		.gpio	   = 83, //CAM_PIN_GPIO_MCAM_SPI_CS0,
+		.settings = {
+			[GPIOMUX_ACTIVE] = &cam_settings[17], /*A FUNC1 2MA*/
+			[GPIOMUX_SUSPENDED] = &cam_settings[10], /* O(L) 2MA*/
+		},
+	},
+	{
+		.gpio	   = 84, //CAM_PIN_GPIO_MCAM_SPI_CLK,
+		.settings = {
+			[GPIOMUX_ACTIVE] = &cam_settings[17], /*A FUNC1 2MA*/
+			[GPIOMUX_SUSPENDED] = &cam_settings[10], /*O(L) 2MA*/
+		},
+	},
+	{
+		.gpio = 79, //CAM_PIN_GPIO_RAW_INTR1,
+		.settings = {
+			[GPIOMUX_ACTIVE]    = &cam_settings[7], /*I(NP) 2MA*/
+			[GPIOMUX_SUSPENDED] = &cam_settings[8], /*I(L) 2MA*/
+		},
+	},
+	{
+		.gpio = 80, //CAM_PIN_GPIO_RAW_INTR0,
+		.settings = {
+			[GPIOMUX_ACTIVE]    = &cam_settings[7], /*I(NP) 2MA*/
+			[GPIOMUX_SUSPENDED] = &cam_settings[8], /*I(L) 2MA*/
+		},
+	},
+};
 
 static struct msm_gpiomux_config wcnss_5wire_interface[] = {
 	{
@@ -1162,18 +1207,21 @@ void __init msm_htc_8974_init_gpiomux(void)
 		return;
 	}
 
-	msm_gpiomux_install(msm_blsp_configs, ARRAY_SIZE(msm_blsp_configs));
+	msm_gpiomux_install(msm_blsp_configs,
+			ARRAY_SIZE(msm_blsp_configs));
 	msm_gpiomux_install(msm_blsp2_uart7_configs,
-			 ARRAY_SIZE(msm_blsp2_uart7_configs));
+			ARRAY_SIZE(msm_blsp2_uart7_configs));
 	msm_gpiomux_install(wcnss_5wire_interface,
-				ARRAY_SIZE(wcnss_5wire_interface));
+			ARRAY_SIZE(wcnss_5wire_interface));
 
 	msm_gpiomux_install(msm8974_slimbus_config,
 			ARRAY_SIZE(msm8974_slimbus_config));
 
-	msm_gpiomux_install(msm_touch_configs, ARRAY_SIZE(msm_touch_configs));
+	msm_gpiomux_install(msm_touch_configs,
+			ARRAY_SIZE(msm_touch_configs));
 
-	msm_gpiomux_install(msm_sensor_configs, ARRAY_SIZE(msm_sensor_configs));
+	msm_gpiomux_install(msm_sensor_configs,
+			ARRAY_SIZE(msm_sensor_configs));
 
 	msm_gpiomux_install(&nfc_irq_config, 1);
 
@@ -1181,12 +1229,16 @@ void __init msm_htc_8974_init_gpiomux(void)
 
 	msm_gpiomux_sdc4_install();
 
-	msm_gpiomux_install(msm_taiko_config, ARRAY_SIZE(msm_taiko_config));
+	msm_gpiomux_install(msm_taiko_config,
+			ARRAY_SIZE(msm_taiko_config));
 
-	msm_gpiomux_install(msm_hsic_configs, ARRAY_SIZE(msm_hsic_configs));
+	msm_gpiomux_install(msm_hsic_configs,
+			ARRAY_SIZE(msm_hsic_configs));
 
-	msm_gpiomux_install(msm_hdmi_configs, ARRAY_SIZE(msm_hdmi_configs));
-	msm_gpiomux_install(msm_mhl_configs, ARRAY_SIZE(msm_mhl_configs));
+	msm_gpiomux_install(msm_hdmi_configs,
+			ARRAY_SIZE(msm_hdmi_configs));
+	msm_gpiomux_install(msm_mhl_configs,
+			ARRAY_SIZE(msm_mhl_configs));
 
 	msm_gpiomux_install_nowrite(msm_lcd_configs,
 			ARRAY_SIZE(msm_lcd_configs));
@@ -1194,7 +1246,8 @@ void __init msm_htc_8974_init_gpiomux(void)
 	msm_gpiomux_install(msm_aud_configs,
 				 ARRAY_SIZE(msm_aud_configs));
 
-	msm_gpiomux_install(msm_cir_configs, ARRAY_SIZE(msm_cir_configs));
+	msm_gpiomux_install(msm_cir_configs,
+			ARRAY_SIZE(msm_cir_configs));
 
 	if (of_machine_pid() == b2_WLJ_PID)
 		msm_gpiomux_install(msm_felica_configs, ARRAY_SIZE(msm_felica_configs));
@@ -1202,5 +1255,8 @@ void __init msm_htc_8974_init_gpiomux(void)
 	if (socinfo_get_platform_subtype() == PLATFORM_SUBTYPE_MDM)
 		msm_gpiomux_install(mdm_configs,
 			ARRAY_SIZE(mdm_configs));
+
+	msm_gpiomux_install(msm_blsp_rawchip_spi_configs,
+			ARRAY_SIZE(msm_blsp_rawchip_spi_configs));
 
 }
