@@ -513,7 +513,7 @@ struct htc_chg_timer {
 	unsigned long total_time_ms;
 };
 
-#if defined(CONFIG_MACH_DUMMY)
+#if defined(CONFIG_MACH_B2_WLJ)
 static const struct qpnp_vadc_map_pt usb_adcmap_btm_threshold[] = {
 	{-200, 1668},
 	{-190, 1659},
@@ -719,7 +719,7 @@ qpnp_chg_set_appropriate_battery_current(struct qpnp_chg_chip *chip);
 static int qpnp_chg_ibatmax_set(struct qpnp_chg_chip *chip, int chg_current);
 int htc_battery_is_support_qc20(void);
 int htc_battery_check_cable_type_from_usb(void);
-#if defined(CONFIG_MACH_DUMMY)
+#if defined(CONFIG_MACH_B2_WLJ)
 static int32_t read_usb_temperature_mpp2(struct qpnp_chg_chip *chip);
 static int64_t read_usb_temperature_mpp2_vol(struct qpnp_chg_chip *chip);
 #endif
@@ -3156,7 +3156,7 @@ static void retry_aicl_mechanism(struct qpnp_chg_chip *chip)
 			pr_err("AICL: error reading USBIN channel = %d, rc = %d\n",
 					USBIN, rc);
 		usbin = (int)result.physical;
-#if defined(CONFIG_MACH_DUMMY)
+#if defined(CONFIG_MACH_B2_WLJ)
 				usb_target_ma = USB_MA_1700;
 #else
 				usb_target_ma = USB_MA_1600;
@@ -3535,7 +3535,7 @@ aicl_check_worker(struct work_struct *work)
 			if (usb_ma >= usb_target_ma) {
 				is_aicl_worker_enabled = false;
 
-#if !(defined(CONFIG_MACH_DUMMY))
+#if !(defined(CONFIG_MACH_B2_WLJ))
 				if (usb_ma > USB_MA_1500) {
 					usb_target_ma = USB_MA_1500;
 					__pm8941_charger_vbus_draw(usb_target_ma);
@@ -3937,7 +3937,7 @@ int pm8941_set_pwrsrc_and_charger_enable(enum htc_power_source_type src,
 			if (htc_power_bank_workaround_detect())
 				mA = htc_power_bank_set_pwrsrc();
 			else
-#if defined(CONFIG_MACH_DUMMY)
+#if defined(CONFIG_MACH_B2_WLJ)
 				mA = USB_MA_1700;
 #else
 				mA = USB_MA_1600;
@@ -4658,7 +4658,7 @@ static void dump_all(int more)
 	tbat_deg = get_prop_batt_temp(the_chip)/10;
 	if (tbat_deg >= 68)
 		pr_warn("battery temperature=%d >= 68\n", tbat_deg);
-#if defined(CONFIG_MACH_DUMMY)
+#if defined(CONFIG_MACH_B2_WLJ)
 	usb_temp = (int)read_usb_temperature_mpp2(the_chip);
 	usb_temp_vol = (int)read_usb_temperature_mpp2_vol(the_chip);
 #else
@@ -4744,7 +4744,7 @@ int pm8941_is_batt_full_eoc_stop(int *result)
 int pm8941_charger_get_attr_text(char *buf, int size)
 {
 	int rc;
-#if defined(CONFIG_MACH_DUMMY)
+#if defined(CONFIG_MACH_B2_WLJ)
 	int usb_temp, usb_temp_vol;
 #endif
 	struct qpnp_vadc_result result;
@@ -4828,7 +4828,7 @@ int pm8941_charger_get_attr_text(char *buf, int size)
 		pr_err("error reading USBIN channel = %d, rc = %d\n", USBIN, rc);
 	len += scnprintf(buf + len, size - len,
 			"USBIN(uV): %d;\n", (int)result.physical);
-#if defined(CONFIG_MACH_DUMMY)
+#if defined(CONFIG_MACH_B2_WLJ)
 	usb_temp = (int)read_usb_temperature_mpp2(the_chip);
 	usb_temp_vol = (int)read_usb_temperature_mpp2_vol(the_chip);
 	len += scnprintf(buf + len, size - len, "usb_temperature: %d;\n", usb_temp);
@@ -5145,7 +5145,7 @@ module_param_call(thermal_mitigation, set_therm_mitigation_level,
 					param_get_uint,
 					&thermal_mitigation, 0644);
 
-#if defined(CONFIG_MACH_DUMMY)
+#if defined(CONFIG_MACH_B2_WLJ)
 static int32_t pm8941_adc_map_temp_voltage(const struct qpnp_vadc_map_pt *pts,
 		uint32_t tablesize, int32_t input, int64_t *output)
 {
