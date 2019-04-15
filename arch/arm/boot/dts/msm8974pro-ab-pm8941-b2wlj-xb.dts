@@ -47,6 +47,34 @@
 			qcom,lpg-lut-enable-pause-lo = <1>;
 		};
 	};
+
+	qcom,leds@d000 {
+		status = "okay";
+		qcom,rgb_0 {
+			label = "rgb";
+			linux,name = "amber";
+			qcom,mode = "pwm";
+			qcom,pwm-channel = <6>;
+			qcom,pwm-us = <2000000>;
+			qcom,duty-ms = <1000>;
+			qcom,max-current = <12>;
+			qcom,default-state = "off";
+			qcom,id = <3>;
+			qcom,pwm_coefficient = <4>;
+		};
+
+		qcom,rgb_1 {
+			label = "rgb";
+			linux,name = "green";
+			qcom,mode = "pwm";
+			qcom,pwm-channel = <5>;
+			qcom,pwm-us = <1000>;
+			qcom,max-current = <12>;
+			qcom,default-state = "off";
+			qcom,id = <4>;
+			qcom,pwm_coefficient = <3>;
+		};
+	};
 };
 
 &soc {
